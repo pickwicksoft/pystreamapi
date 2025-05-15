@@ -28,7 +28,7 @@ Calculates the mean of a numerical Stream. Returns either `int` or `float`.
 
 ```python
 Stream.of([1, 2, 3, 4, 5, 7, 7, 8, 9, 9]) \
-    .first_quartile() # Returns 5.5
+    .mean() # Returns 5.5
 ```
 
 ### `median()`: Calculate the median
@@ -37,7 +37,7 @@ Calculates the median of a numerical Stream. Returns either `int` or `float`.
 
 ```python
 Stream.of([1, 2, 3, 4, 5, 7, 7, 8, 9, 9]) \
-    .first_quartile() # Returns 6.0
+    .median() # Returns 6.0
 ```
 
 ### `mode()`: Calculate the mode
@@ -46,7 +46,7 @@ Calculates the mode(s) (most frequently occurring element/elements) of a numeric
 
 ```python
 Stream.of([1, 2, 3, 4, 5, 7, 7, 8, 9, 9]) \
-    .first_quartile() # Returns [7, 9]
+    .mode() # Returns [7, 9]
 ```
 
 ### `range()`: Calculate the range
@@ -55,7 +55,7 @@ Calculates the range of a numerical Stream. Returns either `int` or `float`.
 
 ```python
 Stream.of([1, 2, 3, 4, 5, 7, 7, 8, 9, 9]) \
-    .first_quartile() # Returns 8
+    .range() # Returns 8
 ```
 
 ### `third_quartile()`: Calculate the range
@@ -64,10 +64,8 @@ Calculates the third quartile of a numerical Stream. Returns either `int` or `fl
 
 ```python
 Stream.of([1, 2, 3, 4, 5, 7, 7, 8, 9, 9]) \
-    .first_quartile() # Returns 8
+    .third_quartile() # Returns 8
 ```
-
-
 
 ### `sum()`: Calculate the sum
 
