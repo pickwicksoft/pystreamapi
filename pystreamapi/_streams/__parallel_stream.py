@@ -40,11 +40,8 @@ class ParallelStream(stream.BaseStream):
             return Optional.empty()
 
     def _flat_map(self, mapper: Callable[[Any], stream.BaseStream]):
-        new_src = []
-        for element in Parallel(n_jobs=-1, prefer="threads", handler=self)(
-                delayed(self.__mapper(mapper))(element) for element in self._source):
-            new_src.extend(element.to_list())
-        self._source = new_src
+        self._source = (item for sublist in Parallel(n_jobs=-1, prefer="threads", handler=self)(
+            delayed(self.__mapper(mapper))(element) for element in self._source) for item in sublist.to_list())
 
     def _group_to_dict(self, key_mapper: Callable[[Any], Any]):
         groups = defaultdict(list)
@@ -63,9 +60,8 @@ class ParallelStream(stream.BaseStream):
         self._peek(action)
 
     def _map(self, mapper: Callable[[Any], Any]):
-        self._source = Parallel(n_jobs=-1, prefer="threads", handler=self)(
-            delayed(self.__mapper(mapper))(element) for element in self._source
-        )
+        self._source = (self._one(mapper=mapper, item=element) for element in Parallel(n_jobs=-1, prefer="threads", handler=self)(
+            delayed(self.__mapper(mapper))(element) for element in self._source))
 
     def _peek(self, action: Callable):
         Parallel(n_jobs=-1, prefer="threads", handler=self)(
@@ -95,3 +91,18 @@ class ParallelStream(stream.BaseStream):
 
     def __mapper(self, mapper):
         return lambda x: self._one(mapper=mapper, item=x)
+
+    @_operation
+    def limit(self, max_size: int) -> 'ParallelStream[K]':
+        """
+        Returns a stream consisting of the elements of this stream, truncated to be no longer
+        than maxSize in length.
+
+        :param max_size:
+        """
+        self._queue.append(Process(self.__limit, max_size))
+        return self
+
+    def __limit(self, max_size: int):
+        """Limits the stream to the first n elements."""
+        self._source = limit(self._source, max_size)

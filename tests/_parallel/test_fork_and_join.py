@@ -80,3 +80,41 @@ class TestForkAndJoin(TestCase):
         self.parallelizer.set_source([None])
         result = self.parallelizer.filter(lambda x: x is not None)
         self.assertListEqual([], result)
+
+    def test_limit(self):
+        self.parallelizer.set_source([1, 2, 3, 4, 5])
+        result = list(self.parallelizer.limit(3))
+        self.assertListEqual(result, [1, 2, 3])
+
+    def test_limit_empty(self):
+        self.parallelizer.set_source([])
+        result = list(self.parallelizer.limit(3))
+        self.assertListEqual(result, [])
+
+    def test_limit_one_element(self):
+        self.parallelizer.set_source([1])
+        result = list(self.parallelizer.limit(3))
+        self.assertListEqual(result, [1])
+
+    def test_limit_infinite_source(self):
+        def infinite_gen():
+            i = 0
+            while True:
+                yield i
+                i += 1
+
+        self.parallelizer.set_source(infinite_gen())
+        result = list(self.parallelizer.limit(5))
+        self.assertListEqual(result, [0, 1, 2, 3, 4])
+
+    def test_filter_infinite_source(self):
+        def infinite_gen():
+            i = 0
+            while True:
+                yield i
+                i += 1
+
+        self.parallelizer.set_source(infinite_gen())
+        result = self.parallelizer.filter(lambda x: x % 2 == 0)
+        limited_result = list(self.parallelizer.limit(5))
+        self.assertListEqual(limited_result, [0, 2, 4, 6, 8])

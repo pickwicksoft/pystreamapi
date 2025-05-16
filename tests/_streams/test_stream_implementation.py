@@ -208,6 +208,28 @@ class TestStreamImplementation(unittest.TestCase):
                   .map(lambda x: x * 2).filter(lambda x: x < 10).limit(5).to_list())
         self.assertListEqual(result, [0, 2, 4, 6, 8])
 
+    def test_parallel_stream_limit_infinite_source(self):
+        if self.stream == ParallelStream:
+            def infinite_gen():
+                i = 0
+                while True:
+                    yield i
+                    i += 1
+
+            result = self.stream(infinite_gen()).limit(5).to_list()
+            self.assertListEqual(result, [0, 1, 2, 3, 4])
+
+    def test_parallel_stream_filter_infinite_source(self):
+        if self.stream == ParallelStream:
+            def infinite_gen():
+                i = 0
+                while True:
+                    yield i
+                    i += 1
+
+            result = self.stream(infinite_gen()).filter(lambda x: x % 2 == 0).limit(5).to_list()
+            self.assertListEqual(result, [0, 2, 4, 6, 8])
+
 
 if __name__ == '__main__':
     unittest.main()

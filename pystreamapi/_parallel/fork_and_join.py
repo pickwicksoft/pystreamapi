@@ -1,10 +1,10 @@
 # pylint: disable=protected-access
 import os
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Optional, Iterable, Generator
 
 from joblib import delayed
 
-from pystreamapi._itertools.tools import reduce
+from pystreamapi._itertools.tools import reduce, limit
 from pystreamapi._parallel.parallelizer import Parallel
 from pystreamapi._streams.error.__error import ErrorHandler
 from pystreamapi._streams.error.__levels import ErrorLevel
@@ -27,7 +27,7 @@ class Parallelizer:
         self.__src = None
         self.__handler: Optional[ErrorHandler] = None
 
-    def set_source(self, src: list, handler: ErrorHandler=None):
+    def set_source(self, src: Iterable, handler: ErrorHandler=None):
         """
         Set the source list
         :param handler: The error handler to be used
@@ -43,19 +43,21 @@ class Parallelizer:
             result = self.__run_job_in_parallel(parts, self._filter_ignore_errors, function)
         else:
             result = self.__run_job_in_parallel(parts, self.__filter, function)
-        return [item for sublist in result for item in sublist]
+        return (item for sublist in result for item in sublist)
 
     @staticmethod
     def __filter(function, src):
         """Filter function used in the fork-and-join technology"""
-        return [element for element in src if function(element)]
+        return (element for element in src if function(element))
 
     def _filter_ignore_errors(self, function, src):
         """Filter function used in the fork-and-join technology using an error handler"""
-        return [self.__handler._one(condition=function, item=element) for element in src]
+        return (self.__handler._one(condition=function, item=element) for element in src)
 
     def reduce(self, function: Callable[[Any, Any], Any]):
         """Parallel reduce function using functools.reduce behind"""
+        if isinstance(self.__src, Generator):
+            self.__src = list(self.__src)
         if len(self.__src) < 2:
             return self.__src
         parts = self.fork(min_nr_items=2)
@@ -73,6 +75,8 @@ class Parallelizer:
         """
         if min_nr_items < 1:
             raise ValueError("There cannot be less than one element per list")
+        if isinstance(self.__src, Generator):
+            self.__src = list(self.__src)
         if len(self.__src) == 0:
             return self.__src
         nr_of_parts = self.__calculate_number_of_parts(min_nr_items)
@@ -99,3 +103,7 @@ class Parallelizer:
         return Parallel(n_jobs=-1, prefer="processes", handler=self.__handler)(
             delayed(operation)(op_function, part) for part in src
         )
+
+    def limit(self, max_size: int):
+        """Limit the source to the first n elements"""
+        self.__src = limit(self.__src, max_size)
