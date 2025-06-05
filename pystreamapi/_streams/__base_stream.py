@@ -89,9 +89,7 @@ class BaseStream(Iterable[K], ErrorHandler):
             raise RuntimeError("The stream has been closed")
 
     def _is_parallelism_recommended(self) -> bool:
-        """
-        Determines if parallelism is recommended for the current stream.
-        """
+        """Determines if parallelism is recommended for the current stream."""
         if isinstance(self._source, Sized):
             for item in self._queue.get_queue():
                 if item.has_name(self._filter) and len(self._source) > 3000:

@@ -44,9 +44,10 @@ class StreamConverter:
 
     @staticmethod
     def choose_implementation(stream: BaseStream) -> BaseStream:
-        """Chooses the implementation of the stream based on whether
-        parallelization is recommended or not."""
-        if not stream._implementation_explicit:
-            if stream._is_parallelism_recommended():
+        """
+        Chooses the implementation of the stream based on whether
+        parallelization is recommended or not.
+        """
+        if not stream._implementation_explicit and stream._is_parallelism_recommended():
                 return StreamConverter.to_parallel_stream(stream)
         return stream
