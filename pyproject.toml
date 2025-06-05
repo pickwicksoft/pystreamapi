@@ -13,8 +13,8 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
-joblib = ">=1.2,<=1.4.2"
+python = ">=3.10,<4.0"
+joblib = ">=1.2.0"
 defusedxml = { version = ">=0.7,<0.8", optional = true }
 pyyaml = "^6.0.1"
 tomlkit = "^0.13.2"
@@ -32,6 +32,10 @@ coverage = "*"
 
 [tool.poetry.group.lint.dependencies]
 pylint = "*"
+
+[tool.poetry.group.benchmark.dependencies]
+rich = "^14.0.0"
+matplotlib = "^3.10.3"
 
 [build-system]
 requires = ["poetry-core"]
