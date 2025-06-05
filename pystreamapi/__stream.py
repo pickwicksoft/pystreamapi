@@ -35,6 +35,16 @@ class Stream:
         """
 
     @staticmethod
+    @overload
+    def of(source: Generator[_K, Any, Any]) -> NumericBaseStream:
+        """
+        Create a new Stream from a generator. The implementation will use a sequential stream.
+        If you need a parallel or numeric stream, use the appropriate method.
+
+        :param source:
+        """
+
+    @staticmethod
     def of(source: Union[Iterable, Generator, Sized]):
         """
         Create a new Stream from a source. The implementation will decide whether to use a
