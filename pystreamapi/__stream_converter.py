@@ -49,5 +49,5 @@ class StreamConverter:
         parallelization is recommended or not.
         """
         if not stream._implementation_explicit and stream._is_parallelism_recommended():
-                return StreamConverter.to_parallel_stream(stream)
+            return StreamConverter.to_parallel_stream(stream)
         return stream
