@@ -20,3 +20,7 @@ class Process:
             self.__work(self.__arg)
         else:
             self.__work()
+
+    def has_name(self, name):
+        """Check if process is method of name"""
+        return self.__work.__name__ == name.__name__

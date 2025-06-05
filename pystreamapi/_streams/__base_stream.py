@@ -5,6 +5,7 @@ import functools
 import itertools
 from abc import abstractmethod
 from builtins import reversed
+from collections.abc import Sized
 from functools import cmp_to_key
 from typing import Iterable, Callable, Any, TypeVar, Iterator, TYPE_CHECKING, Union
 
@@ -47,7 +48,11 @@ def terminal(func):
     @functools.wraps(func)
     @_operation
     def wrapper(*args, **kwargs) -> BaseStream[K]:
+        # pylint: disable=import-outside-toplevel
+        from pystreamapi.__stream_converter import StreamConverter
         self: BaseStream = args[0]
+        self._verify_open()
+        self = StreamConverter.choose_implementation(self)
         self._queue.execute_all()
         self._close()
         return func(*args, **kwargs)
@@ -72,6 +77,7 @@ class BaseStream(Iterable[K], ErrorHandler):
         self._source = source
         self._queue = ProcessQueue()
         self._open = True
+        self._implementation_explicit = False
 
     def _close(self):
         """Close the stream."""
@@ -81,6 +87,23 @@ class BaseStream(Iterable[K], ErrorHandler):
         """Verify if stream is open. If not, raise an exception."""
         if not self._open:
             raise RuntimeError("The stream has been closed")
+
+    def _is_parallelism_recommended(self) -> bool:
+        """
+        Determines if parallelism is recommended for the current stream.
+        """
+        if isinstance(self._source, Sized):
+            for item in self._queue.get_queue():
+                if item.has_name(self._filter) and len(self._source) > 3000:
+                    return True
+        return False
+
+    def _set_implementation_explicit(self):
+        """
+        Sets the implementation as explicit, meaning that the stream will not be converted to a
+        different implementation (e.g., from sequential to parallel) automatically.
+        """
+        self._implementation_explicit = True
 
     @terminal
     def __iter__(self) -> Iterator[K]:
