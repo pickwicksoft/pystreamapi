@@ -78,6 +78,7 @@ class BaseStream(Iterable[K], ErrorHandler):
         self._queue = ProcessQueue()
         self._open = True
         self._implementation_explicit = False
+        self.__PARALLELISM_RECOMMENDATION_THRESHOLD = 3000
 
     def _close(self):
         """Close the stream."""
@@ -92,7 +93,8 @@ class BaseStream(Iterable[K], ErrorHandler):
         """Determines if parallelism is recommended for the current stream."""
         if isinstance(self._source, Sized):
             for item in self._queue.get_queue():
-                if item.has_name(self._filter) and len(self._source) > 3000:
+                if (item.has_name(self._filter)
+                        and len(self._source) > self.__PARALLELISM_RECOMMENDATION_THRESHOLD):
                     return True
         return False
 
