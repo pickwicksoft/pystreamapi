@@ -29,6 +29,7 @@ class StreamConverter:
         elif isinstance(stream, SequentialStream):
             stream.__class__ = ParallelStream
             stream._init_parallelizer()
+        stream._set_implementation_explicit()
         return stream
 
     @staticmethod
@@ -38,4 +39,15 @@ class StreamConverter:
             stream.__class__ = SequentialNumericStream
         elif isinstance(stream, ParallelStream):
             stream.__class__ = SequentialStream
+        stream._set_implementation_explicit()
+        return stream
+
+    @staticmethod
+    def choose_implementation(stream: BaseStream) -> BaseStream:
+        """
+        Chooses the implementation of the stream based on whether
+        parallelization is recommended or not.
+        """
+        if not stream._implementation_explicit and stream._is_parallelism_recommended():
+            return StreamConverter.to_parallel_stream(stream)
         return stream

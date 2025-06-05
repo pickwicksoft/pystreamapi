@@ -16,9 +16,13 @@ def throwing_generator():
     i = 0
     while True:
         yield i
-        i = i + 1
+        i += 1
         if i > 1000:
             raise RecursionError("Infinite generator consumed wrong")
+
+
+def finite_generator():
+    yield from range(200)
 
 @parameterized_class("stream", [
     [SequentialStream],
@@ -82,7 +86,13 @@ class TestStreamImplementation(unittest.TestCase):
         self.assertListEqual(result, [1, 1, 2, 2, 3, 3, 9, 9])
 
     def test_flat_map_infinite_generator(self):
-        result = (self.stream(throwing_generator())
+        # Parallel streams do not support generators
+        result = (self.stream(throwing_generator()).sequential()
+                  .flat_map(lambda x: self.stream([x, x * 2])).limit(6).to_list())
+        self.assertListEqual(result, [0, 0, 1, 2, 2, 4])
+
+    def test_flat_map_finite_generator(self):
+        result = (self.stream(finite_generator())
                   .flat_map(lambda x: self.stream([x, x*2])).limit(6).to_list())
         self.assertListEqual(result, [0, 0, 1, 2, 2, 4])
 
@@ -203,8 +213,14 @@ class TestStreamImplementation(unittest.TestCase):
         result = self.stream([]).to_dict(lambda x: x)
         self.assertDictEqual(result, {})
 
-    def test_handling_of_generator(self):
-        result = (self.stream(throwing_generator())
+    def test_handling_of_infinite_generator(self):
+        # Parallel streams do not support generators
+        result = (self.stream(throwing_generator()).sequential()
+                  .map(lambda x: x * 2).filter(lambda x: x < 10).limit(5).to_list())
+        self.assertListEqual(result, [0, 2, 4, 6, 8])
+
+    def test_handling_of_finite_generator(self):
+        result = (self.stream(finite_generator()).sequential()
                   .map(lambda x: x * 2).filter(lambda x: x < 10).limit(5).to_list())
         self.assertListEqual(result, [0, 2, 4, 6, 8])
 

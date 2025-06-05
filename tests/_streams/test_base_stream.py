@@ -1,8 +1,8 @@
+# pylint: disable=protected-access
 import itertools
 import unittest
 
 from pystreamapi.__optional import Optional
-
 from pystreamapi.__stream import Stream
 from pystreamapi._streams.__parallel_stream import ParallelStream
 from pystreamapi._streams.__sequential_stream import SequentialStream
@@ -118,6 +118,25 @@ class TestBaseStream(unittest.TestCase):
     def test_of_noneable_valid(self):
         result = Stream.of_noneable([1, 2, 3]).to_list()
         self.assertListEqual(result, [1, 2, 3])
+
+    def test_parallelization_recommended(self):
+        stream = Stream.of(range(4000)).filter(lambda x: x % 2 == 0)
+        self.assertTrue(stream._is_parallelism_recommended())
+
+    def test_parallelization_not_recommended_with_generator(self):
+        def gen():
+            yield from range(4000)
+
+        stream = Stream.of(gen()).filter(lambda x: x % 2 == 0)
+        self.assertFalse(stream._is_parallelism_recommended())
+
+    def test_parallelization_not_recommended(self):
+        stream = Stream.of(range(10)).filter(lambda x: x % 2 == 0)
+        self.assertFalse(stream._is_parallelism_recommended())
+
+    def test_parallelization_not_recommended_no_filter(self):
+        stream = Stream.of(range(4000)).map(lambda x: x % 2 == 0)
+        self.assertFalse(stream._is_parallelism_recommended())
 
     def test_sort_unsorted(self):
         result = Stream.of([3, 2, 9, 1]).sorted().to_list()

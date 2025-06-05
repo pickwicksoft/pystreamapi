@@ -4,6 +4,7 @@ from typing import Callable, Any
 import pystreamapi._streams.__base_stream as stream
 from pystreamapi.__optional import Optional
 from pystreamapi._itertools.tools import reduce, flat_map, peek
+from pystreamapi._streams.__base_stream import terminal
 from pystreamapi._streams.error.__error import _sentinel
 
 _identity_missing = object()
@@ -12,14 +13,14 @@ _identity_missing = object()
 class SequentialStream(stream.BaseStream):
     """The sequential implementation of BaseStream"""
 
-    @stream.terminal
+    @terminal
     def all_match(self, predicate: Callable[[Any], bool]):
         return all(self._itr(self._source, mapper=predicate))
 
     def _filter(self, predicate: Callable[[Any], bool]):
         self._source = self._itr(self._source, condition=predicate)
 
-    @stream.terminal
+    @terminal
     def find_any(self):
         try:
             return Optional.of(next(iter(self._source)))
@@ -39,7 +40,7 @@ class SequentialStream(stream.BaseStream):
             groups[key].append(element)
         return groups
 
-    @stream.terminal
+    @terminal
     def for_each(self, action: Callable):
         for item in self._source:
             self._one(mapper=action, item=item)
@@ -50,7 +51,7 @@ class SequentialStream(stream.BaseStream):
     def _peek(self, action: Callable):
         self._source = peek(self._source, lambda x: self._one(mapper=action, item=x))
 
-    @stream.terminal
+    @terminal
     def reduce(self, predicate: Callable, identity=_identity_missing, depends_on_state=False):
         if len(self._source) > 0:
             if identity is not _identity_missing:
@@ -58,6 +59,6 @@ class SequentialStream(stream.BaseStream):
             return Optional.of(reduce(predicate, self._source, handler=self))
         return identity if identity is not _identity_missing else Optional.empty()
 
-    @stream.terminal
+    @terminal
     def to_dict(self, key_mapper: Callable[[Any], Any]) -> dict:
         return self._group_to_dict(key_mapper)
