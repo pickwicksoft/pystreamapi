@@ -1,5 +1,6 @@
 import itertools
-from typing import Iterable, TypeVar, Callable, Optional, overload, Union, Sized, Generator
+from collections.abc import Sized
+from typing import Iterable, TypeVar, Callable, Optional, overload, Union, Generator
 
 from pystreamapi.__iterate import iterate
 from pystreamapi._streams.__base_stream import BaseStream
@@ -30,6 +31,16 @@ class Stream:
         """
         Create a new Stream from a source. The implementation will decide whether to use a
         sequential or a parallel stream
+
+        :param source:
+        """
+
+    @staticmethod
+    @overload
+    def of(source: Generator[_K, None, None]) -> NumericBaseStream:
+        """
+        Create a new Stream from a generator. The implementation will use a sequential stream.
+        If you need a parallel or numeric stream, use the appropriate method.
 
         :param source:
         """
