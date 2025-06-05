@@ -123,6 +123,13 @@ class TestBaseStream(unittest.TestCase):
         stream = Stream.of(range(4000)).filter(lambda x: x % 2 == 0)
         self.assertTrue(stream._is_parallelism_recommended())
 
+    def test_parallelization_not_recommended_with_generator(self):
+        def gen():
+            yield from range(4000)
+
+        stream = Stream.of(gen()).filter(lambda x: x % 2 == 0)
+        self.assertFalse(stream._is_parallelism_recommended())
+
     def test_parallelization_not_recommended(self):
         stream = Stream.of(range(10)).filter(lambda x: x % 2 == 0)
         self.assertFalse(stream._is_parallelism_recommended())
