@@ -1,4 +1,5 @@
 # pylint: disable=not-context-manager
+from types import GeneratorType
 from unittest import TestCase
 from unittest.mock import patch, mock_open
 
@@ -37,7 +38,7 @@ class TestYamlLoader(TestCase):
               patch(PATH_EXISTS, return_value=True),
               patch(PATH_ISFILE, return_value=True)):
             data = yaml(file_path)
-            self.assertEqual(len(data), 0)
+            self.assertEqual(len(list(data)), 0)
 
     def test_yaml_loader_with_invalid_path(self):
         with self.assertRaises(FileNotFoundError):
@@ -54,11 +55,20 @@ class TestYamlLoader(TestCase):
     def test_yaml_loader_from_empty_string(self):
         self.assertEqual(list(yaml('', read_from_src=True)), [])
 
+    def test_yaml_loader_is_lazy(self):
+        with (patch(OPEN, mock_open(read_data=file_content)),
+              patch(PATH_EXISTS, return_value=True),
+              patch(PATH_ISFILE, return_value=True)):
+            data = yaml(file_path)
+            self.assertIsInstance(data, GeneratorType)
+
     def _check_extracted_data(self, data):
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0].attr1, 1)
-        self.assertIsInstance(data[0].attr1, int)
-        self.assertEqual(data[0].attr2, 2.0)
-        self.assertIsInstance(data[0].attr2, float)
-        self.assertIsInstance(data[1].attr1, list)
-        self.assertEqual(data[1].attr1[0].attr1, 'a')
+        first = next(data)
+        self.assertEqual(first.attr1, 1)
+        self.assertIsInstance(first.attr1, int)
+        self.assertEqual(first.attr2, 2.0)
+        self.assertIsInstance(first.attr2, float)
+        second = next(data)
+        self.assertIsInstance(second.attr1, list)
+        self.assertEqual(second.attr1[0].attr1, 'a')
+        self.assertRaises(StopIteration, next, data)

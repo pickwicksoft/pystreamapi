@@ -1,5 +1,4 @@
 # pylint: disable=not-context-manager
-from json import JSONDecodeError
 from unittest import TestCase
 from unittest.mock import patch, mock_open
 
@@ -46,7 +45,7 @@ class TestJsonLoader(TestCase):
               patch(PATH_EXISTS, return_value=True),
               patch(PATH_ISFILE, return_value=True)):
             data = json(file_path)
-            self.assertEqual(len(data), 0)
+            self.assertRaises(StopIteration, next, data)
 
     def test_json_loader_with_invalid_path(self):
         with self.assertRaises(FileNotFoundError):
@@ -61,14 +60,20 @@ class TestJsonLoader(TestCase):
         self._check_extracted_data(data)
 
     def test_json_loader_from_empty_string(self):
-        with self.assertRaises(JSONDecodeError):
-            len(json('', read_from_src=True))
+        self.assertRaises(StopIteration, next, json("", read_from_src=True))
 
     def _check_extracted_data(self, data):
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0].attr1, 1)
-        self.assertIsInstance(data[0].attr1, int)
-        self.assertEqual(data[0].attr2, 2.0)
-        self.assertIsInstance(data[0].attr2, float)
-        self.assertIsInstance(data[1].attr1, list)
-        self.assertEqual(data[1].attr1[0].attr1, 'a')
+        # Test first row
+        first = next(data)
+        self.assertEqual(first.attr1, 1)
+        self.assertIsInstance(first.attr1, int)
+        self.assertEqual(first.attr2, 2.0)
+        self.assertIsInstance(first.attr2, float)
+
+        # Test second row
+        second = next(data)
+        self.assertEqual(second.attr1[0].attr1, 'a')
+        self.assertIsInstance(second.attr1, list)
+
+        # Verify end of file
+        self.assertRaises(StopIteration, next, data)
