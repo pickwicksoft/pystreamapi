@@ -1,3 +1,5 @@
+from typing import Any, Iterator
+
 try:
     import yaml as yaml_lib
 except ImportError as exc:
@@ -6,11 +8,10 @@ except ImportError as exc:
     ) from exc
 from collections import namedtuple
 
-from pystreamapi.loaders.__lazy_file_iterable import LazyFileIterable
 from pystreamapi.loaders.__loader_utils import LoaderUtils
 
 
-def yaml(src: str, read_from_src=False) -> LazyFileIterable:
+def yaml(src: str, read_from_src=False) -> Iterator[Any]:
     """
     Loads YAML data from either a path or a string and converts it into a list of namedtuples.
 
@@ -23,26 +24,26 @@ def yaml(src: str, read_from_src=False) -> LazyFileIterable:
         list: A list of namedtuples, where each namedtuple represents an object in the YAML.
     """
     if read_from_src:
-        return LazyFileIterable(lambda: __load_yaml_string(src))
+        return __load_yaml_string(src)
     path = LoaderUtils.validate_path(src)
-    return LazyFileIterable(lambda: __load_yaml_file(path))
+    return __load_yaml_file(path)
 
 
 def __load_yaml_file(file_path):
     """Load a YAML file and convert it into a list of namedtuples"""
     # skipcq: PTC-W6004
-    with open(file_path, mode='r', encoding='utf-8') as yamlfile:
-        src = yamlfile.read()
-        if src == '':
-            return []
-        data = yaml_lib.safe_load(src)
-        return __convert_to_namedtuples(data)
+    with open(file_path, 'r', encoding='utf-8') as yamlfile:
+        # Supports both single and multiple documents
+        for document in yaml_lib.safe_load_all(yamlfile):
+            if document:
+                yield from __convert_to_namedtuples(document)
 
 
 def __load_yaml_string(yaml_string):
     """Load YAML data from a string and convert it into a list of namedtuples"""
-    data = yaml_lib.safe_load(yaml_string)
-    return [] if data is None else __convert_to_namedtuples(data)
+    for document in yaml_lib.safe_load_all(yaml_string):
+        if document:
+            yield from __convert_to_namedtuples(document)
 
 
 def __convert_to_namedtuples(data, name='Item'):

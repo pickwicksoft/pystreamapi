@@ -1,3 +1,5 @@
+from typing import Iterator, Any
+
 try:
     from defusedxml import ElementTree
 except ImportError as exc:
@@ -5,7 +7,6 @@ except ImportError as exc:
         "Please install the xml_loader extra dependency to use the xml loader."
     ) from exc
 from collections import namedtuple
-from pystreamapi.loaders.__lazy_file_iterable import LazyFileIterable
 from pystreamapi.loaders.__loader_utils import LoaderUtils
 
 
@@ -21,14 +22,14 @@ config = __XmlLoaderUtil()
 
 
 def xml(src: str, read_from_src=False, retrieve_children=True, cast_types=True,
-        encoding="utf-8") -> LazyFileIterable:
+        encoding="utf-8") -> Iterator[Any]:
     """
     Loads XML data from either a path or a string and converts it into a list of namedtuples.
     Warning: This method isn't safe against malicious XML trees. Parse only safe XML from sources
     you trust.
 
     Returns:
-        LazyFileIterable: A list of namedtuples, where each namedtuple represents an XML element.
+        An iterator with namedtuples, where each namedtuple represents an XML element.
         :param retrieve_children: If true, the children of the root element are used as stream
         elements.
         :param encoding: The encoding of the XML file.
@@ -39,32 +40,37 @@ def xml(src: str, read_from_src=False, retrieve_children=True, cast_types=True,
     """
     config.cast_types = cast_types
     config.retrieve_children = retrieve_children
+
     if read_from_src:
-        return LazyFileIterable(lambda: __load_xml_string(src))
+        return _lazy_parse_xml_string(src)
+
     path = LoaderUtils.validate_path(src)
-    return LazyFileIterable(lambda: __load_xml_file(path, encoding))
+    return _lazy_parse_xml_file(path, encoding)
 
 
-def __load_xml_file(file_path, encoding):
-    """Load an XML file and convert it into a list of namedtuples."""
-    # skipcq: PTC-W6004
-    with open(file_path, mode='r', encoding=encoding) as xmlfile:
-        src = xmlfile.read()
-        if src:
-            return __parse_xml_string(src)
-    return []
+def _lazy_parse_xml_file(file_path: str, encoding: str) -> Iterator[Any]:
+    def generator():
+        with open(file_path, mode='r', encoding=encoding) as xmlfile:
+            xml_string = xmlfile.read()
+            yield from _parse_xml_string_lazy(xml_string)
+
+    return generator()
 
 
-def __load_xml_string(xml_string):
-    """Load XML data from a string and convert it into a list of namedtuples."""
-    return __parse_xml_string(xml_string)
+def _lazy_parse_xml_string(xml_string: str) -> Iterator[Any]:
+    def generator():
+        yield from _parse_xml_string_lazy(xml_string)
+
+    return generator()
 
 
-def __parse_xml_string(xml_string):
-    """Parse XML string and convert it into a list of namedtuples."""
+def _parse_xml_string_lazy(xml_string: str) -> Iterator[Any]:
     root = ElementTree.fromstring(xml_string)
-    parsed_xml = __parse_xml(root)
-    return __flatten(parsed_xml) if config.retrieve_children else [parsed_xml]
+    parsed = __parse_xml(root)
+    if config.retrieve_children:
+        yield from __flatten(parsed)
+    else:
+        yield parsed
 
 
 def __parse_xml(element):
@@ -107,11 +113,9 @@ def __filter_single_items(tag_dict):
 
 
 def __flatten(data):
-    """Flatten a list of lists."""
-    res = []
+    """Yield flattened elements from a possibly nested structure."""
     for item in data:
         if isinstance(item, list):
-            res.extend(item)
+            yield from item
         else:
-            res.append(item)
-    return res
+            yield item
