@@ -102,21 +102,21 @@ class TestXmlLoader(TestCase):
             try:
                 first = next(data)
             except StopIteration:
-                continue
+                pass
             self.assertEqual(first.salary, '80000')
             self.assertIsInstance(first.salary, str)
 
             try:
                 second = next(data)
             except StopIteration:
-                continue
+                pass
             self.assertEqual(second.child.name, "Frank")
             self.assertIsInstance(second.child.name, str)
 
             try:
                 third = next(data)
             except StopIteration:
-                continue
+                pass
             self.assertEqual(third.cars.car[0], 'Bugatti')
             self.assertIsInstance(third.cars.car[0], str)
 
