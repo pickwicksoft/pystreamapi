@@ -3,6 +3,8 @@ from types import GeneratorType
 from unittest import TestCase
 from unittest.mock import patch, mock_open
 
+import yaml as yaml_lib
+
 from _loaders.file_test import OPEN, PATH_EXISTS, PATH_ISFILE
 from pystreamapi.loaders import yaml
 
@@ -61,6 +63,11 @@ class TestYamlLoader(TestCase):
               patch(PATH_ISFILE, return_value=True)):
             data = yaml(file_path)
             self.assertIsInstance(data, GeneratorType)
+
+    def test_yaml_loader_with_malformed_yaml(self):
+        malformed_yaml = "key: : invalid"
+        with self.assertRaises(yaml_lib.YAMLError):
+            list(yaml(malformed_yaml, read_from_src=True))
 
     def _check_extracted_data(self, data):
         first = next(data)
