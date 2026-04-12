@@ -10,17 +10,6 @@ from collections import namedtuple
 from pystreamapi.loaders.__loader_utils import LoaderUtils
 
 
-class __XmlLoaderUtil:
-    """Utility class for the XML loader."""
-
-    def __init__(self):
-        self.cast_types = True
-        self.retrieve_children = True
-
-
-config = __XmlLoaderUtil()
-
-
 def xml(src: str, read_from_src=False, retrieve_children=True, cast_types=True,
         encoding="utf-8") -> Iterator[Any]:
     """
@@ -38,70 +27,70 @@ def xml(src: str, read_from_src=False, retrieve_children=True, cast_types=True,
             a path to an XML file.
         :param cast_types: Set as False to disable casting of values to int, bool or float.
     """
-    config.cast_types = cast_types
-    config.retrieve_children = retrieve_children
-
     if read_from_src:
-        return _lazy_parse_xml_string(src)
+        return _lazy_parse_xml_string(src, retrieve_children, cast_types)
 
     path = LoaderUtils.validate_path(src)
-    return _lazy_parse_xml_file(path, encoding)
+    return _lazy_parse_xml_file(path, encoding, retrieve_children, cast_types)
 
 
-def _lazy_parse_xml_file(file_path: str, encoding: str) -> Iterator[Any]:
+def _lazy_parse_xml_file(file_path: str, encoding: str,
+                         retrieve_children: bool, cast_types: bool) -> Iterator[Any]:
     def generator():
         with open(file_path, mode='r', encoding=encoding) as xmlfile:
             xml_string = xmlfile.read()
-            yield from _parse_xml_string_lazy(xml_string)
+            yield from _parse_xml_string_lazy(xml_string, retrieve_children, cast_types)
 
     return generator()
 
 
-def _lazy_parse_xml_string(xml_string: str) -> Iterator[Any]:
+def _lazy_parse_xml_string(xml_string: str, retrieve_children: bool,
+                           cast_types: bool) -> Iterator[Any]:
     def generator():
-        yield from _parse_xml_string_lazy(xml_string)
+        yield from _parse_xml_string_lazy(xml_string, retrieve_children, cast_types)
 
     return generator()
 
 
-def _parse_xml_string_lazy(xml_string: str) -> Iterator[Any]:
+def _parse_xml_string_lazy(xml_string: str, retrieve_children: bool,
+                           cast_types: bool) -> Iterator[Any]:
     root = ElementTree.fromstring(xml_string)
-    parsed = __parse_xml(root)
-    if config.retrieve_children:
+    parsed = __parse_xml(root, cast_types)
+    if retrieve_children:
         yield from __flatten(parsed)
     else:
         yield parsed
 
 
-def __parse_xml(element):
+def __parse_xml(element, cast_types: bool):
     """Parse XML element and convert it into a namedtuple."""
     if len(element) == 0:
-        return __parse_empty_element(element)
+        return __parse_empty_element(element, cast_types)
     if len(element) == 1:
-        return __parse_single_element(element)
-    return __parse_multiple_elements(element)
+        return __parse_single_element(element, cast_types)
+    return __parse_multiple_elements(element, cast_types)
 
 
-def __parse_empty_element(element):
+def __parse_empty_element(element, cast_types: bool):
     """Parse XML element without children and convert it into a namedtuple."""
-    return LoaderUtils.try_cast(element.text) if config.cast_types else element.text
+    return LoaderUtils.try_cast(element.text) if cast_types else element.text
 
 
-def __parse_single_element(element):
+def __parse_single_element(element, cast_types: bool):
     """Parse XML element with a single child and convert it into a namedtuple."""
     sub_element = element[0]
-    sub_item = __parse_xml(sub_element)
+    sub_item = __parse_xml(sub_element, cast_types)
     Item = namedtuple(element.tag, [sub_element.tag])
     return Item(sub_item)
 
 
-def __parse_multiple_elements(element):
+def __parse_multiple_elements(element, cast_types: bool):
     """Parse XML element with multiple children and convert it into a namedtuple."""
     tag_dict = {}
     for e in element:
         if e.tag not in tag_dict:
             tag_dict[e.tag] = []
-        tag_dict[e.tag].append(__parse_xml(e))
+        tag_dict[e.tag].append(__parse_xml(e, cast_types))
     filtered_dict = __filter_single_items(tag_dict)
     Item = namedtuple(element.tag, filtered_dict.keys())
     return Item(*filtered_dict.values())

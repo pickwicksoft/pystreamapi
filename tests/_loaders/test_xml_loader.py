@@ -32,9 +32,12 @@ file_path = 'path/to/data.xml'
 
 class TestXmlLoader(TestCase):
 
+    def setUp(self):
+        self.file_content = file_content
+
     @contextmanager
-    def mock_csv_file(self, content=None, exists=True, is_file=True):
-        """Context manager for mocking CSV file operations.
+    def mock_xml_file(self, content=None, exists=True, is_file=True):
+        """Context manager for mocking XML file operations.
 
         Args:
             content: The content of the mocked file
@@ -48,7 +51,7 @@ class TestXmlLoader(TestCase):
             yield
 
     def test_xml_loader_from_file_children(self):
-        with self.mock_csv_file(file_content):
+        with self.mock_xml_file(file_content):
             data = xml(file_path)
 
             first = next(data)
@@ -66,7 +69,7 @@ class TestXmlLoader(TestCase):
             self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_from_file_no_children_false(self):
-        with self.mock_csv_file(file_content):
+        with self.mock_xml_file(file_content):
             data = xml(file_path, retrieve_children=False)
 
             first = next(data)
@@ -80,7 +83,7 @@ class TestXmlLoader(TestCase):
             self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_no_casting(self):
-        with self.mock_csv_file(file_content):
+        with self.mock_xml_file(file_content):
             data = xml(file_path, cast_types=False)
 
             first = next(data)
@@ -98,12 +101,12 @@ class TestXmlLoader(TestCase):
             self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_is_iterable(self):
-        with self.mock_csv_file(file_content):
+        with self.mock_xml_file(file_content):
             data = xml(file_path)
             self.assertEqual(len(list(iter(data))), 3)
 
     def test_xml_loader_with_empty_file(self):
-        with self.mock_csv_file(''):
+        with self.mock_xml_file(''):
             data = xml(file_path)
             self.assertRaises(ParseError, next, data)
 

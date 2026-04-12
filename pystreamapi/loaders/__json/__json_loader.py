@@ -30,9 +30,13 @@ def __lazy_load_json_file(file_path: str) -> Iterator[Any]:
         # skipcq: PTC-W6004
         with open(file_path, mode='r', encoding='utf-8') as jsonfile:
             src = jsonfile.read()
-            if src == '':
+            if not src.strip():
                 return
-            yield from jsonlib.loads(src, object_hook=__dict_to_namedtuple)
+            result = jsonlib.loads(src, object_hook=__dict_to_namedtuple)
+            if isinstance(result, list):
+                yield from result
+            else:
+                yield result
 
     return generator()
 
@@ -43,7 +47,11 @@ def __lazy_load_json_string(json_string: str) -> Iterator[Any]:
     def generator():
         if not json_string.strip():
             return
-        yield from jsonlib.loads(json_string, object_hook=__dict_to_namedtuple)
+        result = jsonlib.loads(json_string, object_hook=__dict_to_namedtuple)
+        if isinstance(result, list):
+            yield from result
+        else:
+            yield result
 
     return generator()
 
