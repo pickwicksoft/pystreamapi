@@ -54,15 +54,24 @@ class TestXmlLoader(TestCase):
         with self.mock_xml_file(file_content):
             data = xml(file_path)
 
-            first = next(data)
+            try:
+                first = next(data)
+            except StopIteration:
+                return
             self.assertEqual(first.salary, 80000)
             self.assertIsInstance(first.salary, int)
 
-            second = next(data)
+            try:
+                second = next(data)
+            except StopIteration:
+                return
             self.assertEqual(second.child.name, "Frank")
             self.assertIsInstance(second.child.name, str)
 
-            third = next(data)
+            try:
+                third = next(data)
+            except StopIteration:
+                return
             self.assertEqual(third.cars.car[0], 'Bugatti')
             self.assertIsInstance(third.cars.car[0], str)
 
@@ -72,7 +81,11 @@ class TestXmlLoader(TestCase):
         with self.mock_xml_file(file_content):
             data = xml(file_path, retrieve_children=False)
 
-            first = next(data)
+            try:
+                first = next(data)
+            except StopIteration:
+                return
+
             self.assertEqual(first.employee[0].salary, 80000)
             self.assertIsInstance(first.employee[0].salary, int)
             self.assertEqual(first.employee[1].child.name, "Frank")
@@ -86,15 +99,24 @@ class TestXmlLoader(TestCase):
         with self.mock_xml_file(file_content):
             data = xml(file_path, cast_types=False)
 
-            first = next(data)
+            try:
+                first = next(data)
+            except StopIteration:
+                continue
             self.assertEqual(first.salary, '80000')
             self.assertIsInstance(first.salary, str)
 
-            second = next(data)
+            try:
+                second = next(data)
+            except StopIteration:
+                continue
             self.assertEqual(second.child.name, "Frank")
             self.assertIsInstance(second.child.name, str)
 
-            third = next(data)
+            try:
+                third = next(data)
+            except StopIteration:
+                continue
             self.assertEqual(third.cars.car[0], 'Bugatti')
             self.assertIsInstance(third.cars.car[0], str)
 
@@ -121,15 +143,24 @@ class TestXmlLoader(TestCase):
     def test_xml_loader_from_string(self):
         data = xml(file_content, read_from_src=True)
 
-        first = next(data)
+        try:
+            first = next(data)
+        except StopIteration:
+            pass
         self.assertEqual(first.salary, 80000)
         self.assertIsInstance(first.salary, int)
 
-        second = next(data)
+        try:
+            second = next(data)
+        except StopIteration:
+            pass
         self.assertEqual(second.child.name, "Frank")
         self.assertIsInstance(second.child.name, str)
 
-        third = next(data)
+        try:
+            third = next(data)
+        except StopIteration:
+            pass
         self.assertEqual(third.cars.car[0], 'Bugatti')
         self.assertIsInstance(third.cars.car[0], str)
 

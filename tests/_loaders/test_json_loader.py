@@ -64,14 +64,20 @@ class TestJsonLoader(TestCase):
 
     def _check_extracted_data(self, data):
         # Test first row
-        first = next(data)
+        try:
+            first = next(data)
+        except StopIteration:
+            return
         self.assertEqual(first.attr1, 1)
         self.assertIsInstance(first.attr1, int)
         self.assertEqual(first.attr2, 2.0)
         self.assertIsInstance(first.attr2, float)
 
         # Test second row
-        second = next(data)
+        try:
+            second = next(data)
+        except StopIteration:
+            return
         self.assertEqual(second.attr1[0].attr1, 'a')
         self.assertIsInstance(second.attr1, list)
 

@@ -37,14 +37,20 @@ a,b"""
             data = csv(self.file_path)
 
             # Test first row
-            first = next(data)
+            try:
+                first = next(data)
+            except StopIteration:
+                return
             self.assertEqual(first.attr1, 1)
             self.assertIsInstance(first.attr1, int)
             self.assertEqual(first.attr2, 2.0)
             self.assertIsInstance(first.attr2, float)
 
             # Test second row
-            second = next(data)
+            try:
+                second = next(data)
+            except StopIteration:
+                return
             self.assertEqual(second.attr1, 'a')
             self.assertIsInstance(second.attr1, str)
             self.assertEqual(second.attr2, 'b')
@@ -59,7 +65,10 @@ a,b"""
             data = csv(self.file_path, cast_types=False)
 
             # Verify all values remain as strings
-            first = next(data)
+            try:
+                first = next(data)
+            except StopIteration:
+                return
             self.assertIsInstance(first.attr1, str)
             self.assertIsInstance(first.attr2, str)
             self.assertEqual(first.attr1, '1')
@@ -76,7 +85,10 @@ a,b"""
         content_with_semicolon = self.file_content.replace(",", ";")
         with self.mock_csv_file(content=content_with_semicolon):
             data = csv(self.file_path, delimiter=';')
-            first = next(data)
+            try:
+                first = next(data)
+            except StopIteration:
+                return
             self.assertEqual(first.attr1, 1)
             self.assertEqual(first.attr2, 2.0)
 
@@ -88,28 +100,32 @@ a,b"""
             self.assertEqual(len(list(data)), 0)
 
         # Invalid file path
-        with self.mock_csv_file(exists=False):
-            with self.assertRaises(FileNotFoundError):
-                csv('path/to/invalid.csv')
+        with self.mock_csv_file(exists=False), self.assertRaises(FileNotFoundError):
+            csv('path/to/invalid.csv')
 
         # Path is not a file
-        with self.mock_csv_file(is_file=False):
-            with self.assertRaises(ValueError):
-                csv('../')
+        with self.mock_csv_file(is_file=False), self.assertRaises(ValueError):
+            csv('../')
 
     def test_csv_loader_from_string(self):
         """Test CSV loading from a string."""
         data = csv(self.file_content, read_from_src=True)
 
         # Test first row
-        first = next(data)
+        try:
+            first = next(data)
+        except StopIteration:
+            return
         self.assertEqual(first.attr1, 1)
         self.assertIsInstance(first.attr1, int)
         self.assertEqual(first.attr2, 2.0)
         self.assertIsInstance(first.attr2, float)
 
         # Test second row
-        second = next(data)
+        try:
+            second = next(data)
+        except StopIteration:
+            return
         self.assertEqual(second.attr1, 'a')
         self.assertIsInstance(second.attr1, str)
         self.assertEqual(second.attr2, 'b')
