@@ -36,13 +36,9 @@ def xml(src: str, read_from_src=False, retrieve_children=True, cast_types=True,
 
 def _lazy_parse_xml_file(file_path: str, encoding: str,
                          retrieve_children: bool, cast_types: bool) -> Iterator[Any]:
-    """
-    Lazily parse an XML file by reading its content and yielding parsed namedtuples.
-    """
+    """Lazily parse an XML file by reading its content and yielding parsed namedtuples."""
     def generator():
-        """
-        Generator that reads the XML file and yields parsed namedtuples lazily.
-        """
+        """Generator that reads the XML file and yields parsed namedtuples lazily."""
         with open(file_path, mode='r', encoding=encoding) as xmlfile:
             xml_string = xmlfile.read()
             yield from _parse_xml_string_lazy(xml_string, retrieve_children, cast_types)
@@ -56,9 +52,7 @@ def _lazy_parse_xml_string(xml_string: str, retrieve_children: bool,
     Lazily parse an XML string by yielding parsed namedtuples for each element.
     """
     def generator():
-        """
-        Generator that yields parsed namedtuples from the XML string lazily.
-        """
+        """Generator that yields parsed namedtuples from the XML string lazily."""
         yield from _parse_xml_string_lazy(xml_string, retrieve_children, cast_types)
 
     return generator()
@@ -66,9 +60,7 @@ def _lazy_parse_xml_string(xml_string: str, retrieve_children: bool,
 
 def _parse_xml_string_lazy(xml_string: str, retrieve_children: bool,
                            cast_types: bool) -> Iterator[Any]:
-    """
-    Parse an XML string into namedtuples, optionally yielding child elements lazily.
-    """
+    """Parse an XML string into namedtuples, optionally yielding child elements lazily."""
     root = ElementTree.fromstring(xml_string)
     parsed = __parse_xml(root, cast_types)
     if retrieve_children:
