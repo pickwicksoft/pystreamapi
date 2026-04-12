@@ -23,8 +23,6 @@ def json(src: str, read_from_src=False) -> Iterator[Any]:
     return __lazy_load_json_file(path)
 
 
-"""Module for lazily loading JSON files and yielding data as namedtuples."""
-
 def __lazy_load_json_file(file_path: str) -> Iterator[Any]:
     """Lazily read and parse a JSON file, yielding namedtuples."""
 
@@ -43,8 +41,6 @@ def __lazy_load_json_file(file_path: str) -> Iterator[Any]:
 
     return generator()
 
-
-"""Module for lazily parsing JSON strings into namedtuple structures."""
 
 def __lazy_load_json_string(json_string: str) -> Iterator[Any]:
     """Lazily parse a JSON string, yielding namedtuples."""

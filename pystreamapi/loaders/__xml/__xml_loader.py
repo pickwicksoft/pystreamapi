@@ -9,11 +9,6 @@ except ImportError as exc:
 from collections import namedtuple
 from pystreamapi.loaders.__loader_utils import LoaderUtils
 
-"""
-Module for lazily parsing XML data into Python namedtuples.
-Provides functions to load XML from files or strings, with optional type casting
-and retrieval of child elements as iterators for efficient streaming.
-"""
 
 def xml(src: str, read_from_src=False, retrieve_children=True, cast_types=True,
         encoding="utf-8") -> Iterator[Any]:
