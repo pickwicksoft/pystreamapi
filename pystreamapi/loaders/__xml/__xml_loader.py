@@ -39,8 +39,8 @@ def _lazy_parse_xml_file(file_path: str, encoding: str,
     """Lazily parse an XML file by reading its content and yielding parsed namedtuples."""
     def generator():
         """Generator that reads the XML file and yields parsed namedtuples lazily."""
+        # skipcq: PTC-W6004
         with open(file_path, mode='r', encoding=encoding) as xmlfile:
-            # skipcq: PTC-W6004
             xml_string = xmlfile.read()
             yield from _parse_xml_string_lazy(xml_string, retrieve_children, cast_types)
 
@@ -49,9 +49,7 @@ def _lazy_parse_xml_file(file_path: str, encoding: str,
 
 def _lazy_parse_xml_string(xml_string: str, retrieve_children: bool,
                            cast_types: bool) -> Iterator[Any]:
-    """
-    Lazily parse an XML string by yielding parsed namedtuples for each element.
-    """
+    """Lazily parse an XML string by yielding parsed namedtuples for each element."""
     def generator():
         """Generator that yields parsed namedtuples from the XML string lazily."""
         yield from _parse_xml_string_lazy(xml_string, retrieve_children, cast_types)
