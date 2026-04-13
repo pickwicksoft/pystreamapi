@@ -1,8 +1,5 @@
 # pylint: disable=not-context-manager
-from unittest import TestCase
-from unittest.mock import patch, mock_open
-
-from _loaders.file_test import OPEN, PATH_EXISTS, PATH_ISFILE
+from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import json
 
 file_content = """
@@ -24,26 +21,20 @@ file_content = """
 file_path = 'path/to/data.json'
 
 
-class TestJsonLoader(TestCase):
+class TestJsonLoader(LoaderTestBase):
 
     def test_json_loader_from_file(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = json(file_path)
             self._check_extracted_data(data)
 
     def test_json_loader_is_iterable(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = json(file_path)
             self.assertEqual(len(list(iter(data))), 2)
 
     def test_json_loader_with_empty_file(self):
-        with (patch(OPEN, mock_open(read_data="")),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(""):
             data = json(file_path)
             self.assertRaises(StopIteration, next, data)
 

@@ -1,10 +1,7 @@
 # pylint: disable=not-context-manager
-from contextlib import contextmanager
-from unittest import TestCase
-from unittest.mock import patch, mock_open
 from xml.etree.ElementTree import ParseError
 
-from _loaders.file_test import OPEN, PATH_EXISTS, PATH_ISFILE
+from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import xml
 
 file_content = """
@@ -30,28 +27,10 @@ file_content = """
 file_path = 'path/to/data.xml'
 
 
-class TestXmlLoader(TestCase):
-
-    def setUp(self):
-        self.file_content = file_content
-
-    @contextmanager
-    def mock_xml_file(self, content=None, exists=True, is_file=True):
-        """Context manager for mocking XML file operations.
-
-        Args:
-            content: The content of the mocked file
-            exists: Whether the file exists
-            is_file: Whether the path points to a file
-        """
-        content = content if content is not None else self.file_content
-        with (patch(OPEN, mock_open(read_data=content)),
-              patch(PATH_EXISTS, return_value=exists),
-              patch(PATH_ISFILE, return_value=is_file)):
-            yield
+class TestXmlLoader(LoaderTestBase):
 
     def test_xml_loader_from_file_children(self):
-        with self.mock_xml_file(file_content):
+        with self.mock_file(file_content):
             data = xml(file_path)
 
             try:
@@ -78,7 +57,7 @@ class TestXmlLoader(TestCase):
             self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_from_file_no_children_false(self):
-        with self.mock_xml_file(file_content):
+        with self.mock_file(file_content):
             data = xml(file_path, retrieve_children=False)
 
             try:
@@ -96,7 +75,7 @@ class TestXmlLoader(TestCase):
             self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_no_casting(self):
-        with self.mock_xml_file(file_content):
+        with self.mock_file(file_content):
             data = xml(file_path, cast_types=False)
 
             try:
@@ -123,12 +102,12 @@ class TestXmlLoader(TestCase):
             self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_is_iterable(self):
-        with self.mock_xml_file(file_content):
+        with self.mock_file(file_content):
             data = xml(file_path)
             self.assertEqual(len(list(iter(data))), 3)
 
     def test_xml_loader_with_empty_file(self):
-        with self.mock_xml_file(''):
+        with self.mock_file(''):
             data = xml(file_path)
             self.assertRaises(ParseError, next, data)
 
