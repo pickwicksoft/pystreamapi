@@ -1,8 +1,68 @@
-import json as jsonlib
+import io
 from collections import namedtuple
 from typing import Any, Iterator
 
+try:
+    import ijson
+except ImportError as exc:
+    raise ImportError(
+        "Please install the json_loader extra dependency (ijson) to use the json loader."
+    ) from exc
+
 from pystreamapi.loaders.__loader_utils import LoaderUtils
+
+_PEEK_SIZE = 4096
+
+
+class _TextToBytesWrapper:
+    """Wraps a text-mode file handle and converts its output to bytes for ijson."""
+
+    def __init__(self, handle, encoding='utf-8'):
+        """Initialize the wrapper with a file handle and text encoding."""
+        self._handle = handle
+        self._encoding = encoding
+
+    def read(self, size=-1):
+        """Read up to size characters from the handle and return bytes, encoding text as needed."""
+        data = self._handle.read(size)
+        if isinstance(data, str):
+            return data.encode(self._encoding)
+        return data if data else b''
+
+
+class _PeekableBytesReader:
+    """Replays a pre-read buffer before delegating further reads to the underlying source."""
+
+    def __init__(self, buffer: bytes, source):
+        """Initialize the peekable bytes reader with a pre-read buffer and underlying source."""
+        self._buf = buffer
+        self._src = source
+
+    def read(self, size=-1):
+        """
+        Read up to size bytes, replaying the pre-read buffer before
+        reading from the underlying source.
+        """
+        if size == -1:
+            # Full-read path: used by non-chunking callers (e.g. test helpers).
+            # Streaming callers (like ijson) always pass an explicit chunk size.
+            tail = self._src.read()
+            if isinstance(tail, str):
+                tail = tail.encode('utf-8')
+            result = self._buf + tail
+            self._buf = b''
+            return result
+        if len(self._buf) >= size:
+            result = self._buf[:size]
+            self._buf = self._buf[size:]
+            return result
+        needed = size - len(self._buf)
+        more = self._src.read(needed)
+        if isinstance(more, str):
+            more = more.encode('utf-8')
+        result = self._buf + more
+        self._buf = b''
+        return result
 
 
 def json(src: str, read_from_src=False) -> Iterator[Any]:
@@ -24,44 +84,70 @@ def json(src: str, read_from_src=False) -> Iterator[Any]:
 
 
 def __lazy_load_json_file(file_path: str) -> Iterator[Any]:
-    """Lazily read and parse a JSON file, yielding namedtuples."""
+    """Lazily read and parse a JSON file, yielding namedtuples incrementally."""
 
     def generator():
-        """Generate namedtuples from the JSON file contents."""
+        """Yield namedtuples from the JSON file using a streaming parser."""
         # skipcq: PTC-W6004
         with open(file_path, mode='r', encoding='utf-8') as jsonfile:
-            src = jsonfile.read()
-            if not src.strip():
-                return
-            result = jsonlib.loads(src, object_hook=__dict_to_namedtuple)
-            if isinstance(result, list):
-                yield from result
-            else:
-                yield result
+            yield from __stream_json_items(jsonfile)
 
     return generator()
 
 
 def __lazy_load_json_string(json_string: str) -> Iterator[Any]:
-    """Lazily parse a JSON string, yielding namedtuples."""
+    """Lazily parse a JSON string, yielding namedtuples incrementally."""
 
     def generator():
-        """Internal generator that yields namedtuples by parsing the JSON string on demand."""
-        if not json_string.strip():
-            return
-        result = jsonlib.loads(json_string, object_hook=__dict_to_namedtuple)
-        if isinstance(result, list):
-            yield from result
-        else:
-            yield result
+        """Yield namedtuples by streaming-parsing the JSON string."""
+        yield from __stream_json_items(io.StringIO(json_string))
 
     return generator()
 
 
+def __stream_json_items(handle) -> Iterator[Any]:
+    """Stream JSON items from a text-mode file-like handle using ijson.
+
+    Reads an initial chunk to detect whether the root value is an array or a
+    single object, then replays that chunk together with the remainder of the
+    handle through a bytes wrapper so that ijson can parse incrementally.
+    """
+    initial = handle.read(_PEEK_SIZE)
+    if isinstance(initial, str):
+        initial_str = initial
+        initial_bytes = initial.encode('utf-8')
+    else:
+        initial_bytes = initial
+        initial_str = initial.decode('utf-8', errors='replace')
+
+    stripped = initial_str.lstrip()
+    if not stripped:
+        return
+
+    first_char = stripped[0]
+    reader = _PeekableBytesReader(initial_bytes, _TextToBytesWrapper(handle))
+
+    if first_char == '[':
+        for item in ijson.items(reader, 'item', use_float=True):
+            yield __dict_to_namedtuple(item)
+    else:
+        obj = next(ijson.items(reader, '', use_float=True), None)
+        if obj is not None:
+            yield __dict_to_namedtuple(obj)
+
+
 def __dict_to_namedtuple(d, name='Item'):
-    """Convert a dictionary to a namedtuple"""
+    """Convert a dictionary (and any nested dicts/lists) to namedtuples recursively.
+
+    List values are materialised eagerly because namedtuple field values must be
+    concrete sequences.  This is O(size of the current item) — the same behaviour
+    as the previous json.loads(object_hook=...) approach — while top-level streaming
+    (one item at a time) is handled by the ijson layer above.
+    """
     if isinstance(d, dict):
         fields = list(d.keys())
         Item = namedtuple(name, fields)
         return Item(**{k: __dict_to_namedtuple(v, k) for k, v in d.items()})
+    if isinstance(d, list):
+        return [__dict_to_namedtuple(item) for item in d]
     return d
