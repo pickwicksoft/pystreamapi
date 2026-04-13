@@ -1,5 +1,6 @@
 # pylint: disable=not-context-manager
 from types import GeneratorType
+from unittest import TestCase
 
 import yaml as yaml_lib
 
@@ -17,7 +18,7 @@ file_content = """
 file_path = 'path/to/data.yaml'
 
 
-class TestYamlLoader(LoaderTestBase):
+class TestYamlLoader(LoaderTestBase, TestCase):
 
     def test_yaml_loader_from_file(self):
         with self.mock_file(file_content):

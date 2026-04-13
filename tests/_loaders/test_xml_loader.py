@@ -1,4 +1,5 @@
 # pylint: disable=not-context-manager
+from unittest import TestCase
 from xml.etree.ElementTree import ParseError
 
 from _loaders.file_test import LoaderTestBase
@@ -27,7 +28,7 @@ file_content = """
 file_path = 'path/to/data.xml'
 
 
-class TestXmlLoader(LoaderTestBase):
+class TestXmlLoader(LoaderTestBase, TestCase):
 
     def test_xml_loader_from_file_children(self):
         with self.mock_file(file_content):

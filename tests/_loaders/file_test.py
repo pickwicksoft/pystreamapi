@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from unittest import TestCase
 from unittest.mock import patch, mock_open
 
 OPEN = 'builtins.open'
@@ -7,7 +6,7 @@ PATH_EXISTS = 'os.path.exists'
 PATH_ISFILE = 'os.path.isfile'
 
 
-class LoaderTestBase(TestCase):
+class LoaderTestBase:
     """Base class for loader tests with a shared file-mocking utility."""
 
     @contextmanager

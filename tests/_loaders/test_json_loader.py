@@ -1,4 +1,6 @@
 # pylint: disable=not-context-manager
+from unittest import TestCase
+
 from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import json
 
@@ -21,7 +23,7 @@ file_content = """
 file_path = 'path/to/data.json'
 
 
-class TestJsonLoader(LoaderTestBase):
+class TestJsonLoader(LoaderTestBase, TestCase):
 
     def test_json_loader_from_file(self):
         with self.mock_file(file_content):

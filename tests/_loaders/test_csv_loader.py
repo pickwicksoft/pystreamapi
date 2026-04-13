@@ -1,9 +1,11 @@
 # pylint: disable=not-context-manager
+from unittest import TestCase
+
 from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import csv
 
 
-class TestCSVLoader(LoaderTestBase):
+class TestCSVLoader(LoaderTestBase, TestCase):
     """Test cases for the CSV loader functionality."""
 
     def setUp(self):
