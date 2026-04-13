@@ -18,7 +18,7 @@ If you want to install pystreamapi together with the optional extensions, use th
 pip install 'streams.py[all]'
 ```
 
-This will install pystreamapi together with all optional loader extras: `xml_loader` (XML support), `json_loader` (streaming JSON support via ijson), and `toml_loader` (TOML support, also included in core). You can also install those extensions individually, as described on the following page:
+This will install pystreamapi together with all optional loader extras: `xml_loader` (XML support) and `json_loader` (streaming JSON support via ijson). TOML and YAML support are included in the core install. You can also install extras individually, as described on the following page:
 
 [data-loaders.md](reference/data-loaders.md "mention")
 

@@ -99,13 +99,13 @@ Available levels: `RAISE` (default), `IGNORE`, `WARN`. See the [error handling d
 
 Load data from files directly into a stream — no manual parsing needed:
 
-| Loader | Install | Description |
-|--------|---------|-------------|
-| `csv`  | core    | CSV files with optional type casting and delimiter |
-| `json` | `pip install 'streams.py[json_loader]'` | JSON files or strings (streaming via ijson) |
-| `xml`  | `pip install 'streams.py[xml_loader]'` | XML files or strings with node path access |
-| `yaml` | core    | YAML files or strings |
-| `toml` | core    | TOML files or strings |
+| Loader | Extra required | Description |
+|--------|----------------|-------------|
+| `csv`  | —              | CSV files with optional type casting and delimiter |
+| `json` | `[json_loader]` | JSON files or strings (streaming via ijson) |
+| `xml`  | `[xml_loader]`  | XML files or strings with node path access |
+| `yaml` | —              | YAML files or strings |
+| `toml` | —              | TOML files or strings |
 
 ```python
 from pystreamapi import Stream
