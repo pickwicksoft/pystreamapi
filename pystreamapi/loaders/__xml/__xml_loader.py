@@ -57,7 +57,7 @@ def _lazy_parse_xml_string(xml_string: str, retrieve_children: bool,
     return generator()
 
 
-def _iterparse_xml(source, retrieve_children: bool, cast_types: bool) -> Iterator[Any]:
+def _iterparse_xml(source: "IO[Any]", retrieve_children: bool, cast_types: bool) -> Iterator[Any]:
     """Drive iterparse over *source* and yield namedtuples incrementally.
 
     When *retrieve_children* is True each direct child of the root element is

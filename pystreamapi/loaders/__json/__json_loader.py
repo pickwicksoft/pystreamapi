@@ -37,6 +37,8 @@ class _PeekableBytesReader:
 
     def read(self, size=-1):
         if size == -1:
+            # Full-read path: used by non-chunking callers (e.g. test helpers).
+            # Streaming callers (like ijson) always pass an explicit chunk size.
             tail = self._src.read()
             if isinstance(tail, str):
                 tail = tail.encode('utf-8')
@@ -128,7 +130,13 @@ def __stream_json_items(handle) -> Iterator[Any]:
 
 
 def __dict_to_namedtuple(d, name='Item'):
-    """Convert a dictionary (and any nested dicts/lists) to namedtuples recursively."""
+    """Convert a dictionary (and any nested dicts/lists) to namedtuples recursively.
+
+    List values are materialised eagerly because namedtuple field values must be
+    concrete sequences.  This is O(size of the current item) — the same behaviour
+    as the previous json.loads(object_hook=...) approach — while top-level streaming
+    (one item at a time) is handled by the ijson layer above.
+    """
     if isinstance(d, dict):
         fields = list(d.keys())
         Item = namedtuple(name, fields)
