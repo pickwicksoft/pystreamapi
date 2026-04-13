@@ -37,9 +37,15 @@ def xml(src: str, read_from_src=False, retrieve_children=True, cast_types=True,
 
 def _lazy_parse_xml_file(file_path: str, encoding: str,
                          retrieve_children: bool, cast_types: bool) -> Iterator[Any]:
-    """Lazily parse an XML file using iterparse, yielding namedtuples without reading all at once."""
+    """
+    Lazily parse an XML file using iterparse, yielding namedtuples
+    without reading all at once.
+    """
     def generator():
-        """Generator that streams XML elements from the file and yields namedtuples lazily."""
+        """
+        Generator that streams XML elements from the file and yields
+        namedtuples lazily.
+        """
         # skipcq: PTC-W6004
         with open(file_path, mode='r', encoding=encoding) as xmlfile:
             yield from _iterparse_xml(xmlfile, retrieve_children, cast_types)
@@ -110,7 +116,7 @@ def __parse_single_element(element, cast_types: bool):
     return Item(sub_item)
 
 
-def __parse_multiple_elements(element, cast_types: bool):
+ def __parse_multiple_elements(element, cast_types: bool):
     """Parse XML element with multiple children and convert it into a namedtuple."""
     tag_dict = {}
     for e in element:
@@ -122,7 +128,7 @@ def __parse_multiple_elements(element, cast_types: bool):
     return Item(*filtered_dict.values())
 
 
-def __filter_single_items(tag_dict):
+ def __filter_single_items(tag_dict):
     """Filter out single-item lists from a dictionary."""
     return {key: value[0] if len(value) == 1 else value for key, value in tag_dict.items()}
 

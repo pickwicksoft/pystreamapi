@@ -14,28 +14,38 @@ from pystreamapi.loaders.__loader_utils import LoaderUtils
 _PEEK_SIZE = 4096
 
 
+"""
+Module for wrapping text-mode file handles and converting their output to bytes for use with ijson.
+"""
+
 class _TextToBytesWrapper:
     """Wraps a text-mode file handle and converts its output to bytes for ijson."""
 
     def __init__(self, handle, encoding='utf-8'):
+        """Initialize the wrapper with a file handle and text encoding."""
         self._handle = handle
         self._encoding = encoding
 
     def read(self, size=-1):
+        """Read up to size characters from the handle and return bytes, encoding text as needed."""
         data = self._handle.read(size)
         if isinstance(data, str):
             return data.encode(self._encoding)
         return data if data else b''
 
 
+"""Module providing a reader that replays a pre-read buffer before delegating further reads to an underlying source."""
+
 class _PeekableBytesReader:
     """Replays a pre-read buffer before delegating further reads to the underlying source."""
 
     def __init__(self, buffer: bytes, source):
+        """Initialize the peekable bytes reader with a pre-read buffer and underlying source."""
         self._buf = buffer
         self._src = source
 
     def read(self, size=-1):
+        """Read up to size bytes, replaying the pre-read buffer before reading from the underlying source."""
         if size == -1:
             # Full-read path: used by non-chunking callers (e.g. test helpers).
             # Streaming callers (like ijson) always pass an explicit chunk size.
