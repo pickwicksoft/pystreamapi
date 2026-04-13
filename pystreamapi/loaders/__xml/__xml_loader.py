@@ -116,7 +116,7 @@ def __parse_single_element(element, cast_types: bool):
     return Item(sub_item)
 
 
- def __parse_multiple_elements(element, cast_types: bool):
+def __parse_multiple_elements(element, cast_types: bool):
     """Parse XML element with multiple children and convert it into a namedtuple."""
     tag_dict = {}
     for e in element:
@@ -128,7 +128,6 @@ def __parse_single_element(element, cast_types: bool):
     return Item(*filtered_dict.values())
 
 
- def __filter_single_items(tag_dict):
+def __filter_single_items(tag_dict):
     """Filter out single-item lists from a dictionary."""
     return {key: value[0] if len(value) == 1 else value for key, value in tag_dict.items()}
-
