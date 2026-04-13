@@ -69,29 +69,60 @@ def _iterparse_xml(source: "IO[Any]", retrieve_children: bool, cast_types: bool)
     When *retrieve_children* is True each direct child of the root element is
     converted and yielded as soon as its closing tag is encountered; the child
     is then removed from the root so that memory is freed immediately.
-
     When *retrieve_children* is False the entire document is consumed and the
     root element is converted and yielded once.
     """
+    context = ElementTree.iterparse(source, events=('start', 'end'))
+    root, depth = _consume_iterparse(context, cast_types, retrieve_children)
+
+
+def _consume_iterparse(
+    context: Iterator[tuple[str, Any]],
+    cast_types: bool,
+    retrieve_children: bool,
+) -> tuple[Any, int]:
+    """Consume *context* events, yielding elements per *retrieve_children* strategy."""
     depth = 0
     root = None
-    context = ElementTree.iterparse(source, events=('start', 'end'))
-
     for event, elem in context:
-        if event == 'start':
-            depth += 1
-            if root is None:
-                root = elem
-        else:  # 'end'
-            depth -= 1
-            if retrieve_children:
-                if depth == 1:
-                    yield __parse_xml(elem, cast_types)
-                    root.remove(elem)
-            else:
-                if depth == 0:
-                    yield __parse_xml(root, cast_types)
-                    return
+        depth, root = _handle_event(event, elem, depth, root)
+        if retrieve_children:
+            yield from _maybe_yield_child(event, elem, depth, root, cast_types)
+        elif _is_root_closed(event, depth):
+            yield __parse_xml(root, cast_types)
+            return
+
+
+def _handle_event(
+    event: str,
+    elem: Any,
+    depth: int,
+    root: Any,
+) -> tuple[int, Any]:
+    """Update depth and capture root on the first start event."""
+    if event == 'start':
+        if root is None:
+            root = elem
+        return depth + 1, root
+    return depth - 1, root
+
+
+def _maybe_yield_child(
+    event: str,
+    elem: Any,
+    depth: int,
+    root: Any,
+    cast_types: bool,
+) -> Iterator[Any]:
+    """Yield and evict a direct child when its closing tag is reached at depth 1."""
+    if event == 'end' and depth == 1:
+        yield __parse_xml(elem, cast_types)
+        root.remove(elem)
+
+
+def _is_root_closed(event: str, depth: int) -> bool:
+    """Return True when the root element's closing tag has been processed."""
+    return event == 'end' and depth == 0
 
 
 def __parse_xml(element, cast_types: bool):
