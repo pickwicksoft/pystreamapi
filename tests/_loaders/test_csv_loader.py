@@ -1,73 +1,88 @@
 # pylint: disable=not-context-manager
 from unittest import TestCase
-from unittest.mock import patch, mock_open
-
-from _loaders.file_test import OPEN, PATH_EXISTS, PATH_ISFILE
+from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import csv
 
-file_content = """
-attr1,attr2
+
+class TestCSVLoader(LoaderTestBase, TestCase):
+    """Test cases for the CSV loader functionality."""
+
+    def setUp(self):
+        self.file_content = """attr1,attr2
 1,2.0
-a,b
-"""
-file_path = 'path/to/data.csv'
+a,b"""
+        self.file_path = 'path/to/data.csv'
 
+    def _assert_typed_rows(self, data):
+        """Assert that the two expected rows are present with correct types and values."""
+        try:
+            first = next(data)
+        except StopIteration:
+            self.fail("Expected first row but iterator was empty")
+        self.assertEqual(first.attr1, 1)
+        self.assertIsInstance(first.attr1, int)
+        self.assertEqual(first.attr2, 2.0)
+        self.assertIsInstance(first.attr2, float)
 
-class TestCSVLoader(TestCase):
+        try:
+            second = next(data)
+        except StopIteration:
+            self.fail("Expected second row but iterator was exhausted after first row")
+        self.assertEqual(second.attr1, 'a')
+        self.assertIsInstance(second.attr1, str)
+        self.assertEqual(second.attr2, 'b')
+        self.assertIsInstance(second.attr2, str)
 
-    def test_csv_loader(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
-            data = csv(file_path)
-            self.assertEqual(len(data), 2)
-            self.assertEqual(data[0].attr1, 1)
-            self.assertIsInstance(data[0].attr1, int)
-            self.assertEqual(data[0].attr2, 2.0)
-            self.assertIsInstance(data[0].attr2, float)
-            self.assertEqual(data[1].attr1, 'a')
-            self.assertIsInstance(data[1].attr1, str)
+        self.assertRaises(StopIteration, next, data)
 
-    def test_csv_loader_with_casting_disabled(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
-            data = csv(file_path, cast_types=False)
-            self.assertEqual(len(data), 2)
-            self.assertEqual(data[0].attr1, '1')
-            self.assertIsInstance(data[0].attr1, str)
-            self.assertEqual(data[0].attr2, '2.0')
-            self.assertIsInstance(data[0].attr2, str)
-            self.assertEqual(data[1].attr1, 'a')
-            self.assertIsInstance(data[1].attr1, str)
+    def test_csv_loader_basic_functionality(self):
+        """Test basic CSV loading with type casting."""
+        with self.mock_file(self.file_content):
+            self._assert_typed_rows(csv(self.file_path))
 
-    def test_csv_loader_is_iterable(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
-            data = csv(file_path)
-            self.assertEqual(len(list(iter(data))), 2)
+    def test_csv_loader_without_type_casting(self):
+        """Test CSV loading with type casting disabled."""
+        with self.mock_file(self.file_content):
+            try:
+                first = next(csv(self.file_path, cast_types=False))
+            except StopIteration:
+                self.fail("Expected first row but iterator was empty")
+            self.assertEqual(first.attr1, '1')
+            self.assertIsInstance(first.attr1, str)
+            self.assertEqual(first.attr2, '2.0')
+            self.assertIsInstance(first.attr2, str)
 
-    def test_csv_loader_with_custom_delimiter(self):
-        with (patch(OPEN, mock_open(read_data=file_content.replace(",", ";"))),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
-            data = csv(file_path, delimiter=';')
-            self.assertEqual(len(data), 2)
-            self.assertEqual(data[0].attr1, 1)
-            self.assertIsInstance(data[0].attr1, int)
+    def test_csv_loader_iteration(self):
+        """Test CSV loader's iteration capability."""
+        with self.mock_file(self.file_content):
+            self.assertEqual(len(list(csv(self.file_path))), 2)
 
-    def test_csv_loader_with_empty_file(self):
-        with (patch(OPEN, mock_open(read_data="")),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
-            data = csv(file_path)
-            self.assertEqual(len(data), 0)
+    def test_csv_loader_custom_delimiter(self):
+        """Test CSV loading with a custom delimiter."""
+        content_with_semicolon = self.file_content.replace(",", ";")
+        with self.mock_file(content_with_semicolon):
+            try:
+                first = next(csv(self.file_path, delimiter=';'))
+            except StopIteration:
+                self.fail("Expected first row but iterator was empty")
+            self.assertEqual(first.attr1, 1)
+            self.assertEqual(first.attr2, 2.0)
 
-    def test_csv_loader_with_invalid_path(self):
-        with self.assertRaises(FileNotFoundError):
+    def test_csv_loader_edge_cases(self):
+        """Test CSV loader with edge cases."""
+        with self.mock_file(""):
+            self.assertEqual(len(list(csv(self.file_path))), 0)
+
+        with self.mock_file(self.file_content, exists=False), self.assertRaises(FileNotFoundError):
             csv('path/to/invalid.csv')
 
-    def test_csv_loader_with_no_file(self):
-        with self.assertRaises(ValueError):
+        with self.mock_file(self.file_content, is_file=False), self.assertRaises(ValueError):
             csv('../')
+
+    def test_csv_loader_from_string(self):
+        """Test CSV loading from a string."""
+        self._assert_typed_rows(csv(self.file_content, read_from_src=True))
+
+    def test_csv_loader_from_empty_string(self):
+        """Test CSV loading from an empty string."""
+        self.assertRaises(StopIteration, next, csv("", read_from_src=True))

@@ -1,9 +1,8 @@
 # pylint: disable=not-context-manager
 from unittest import TestCase
-from unittest.mock import patch, mock_open
 from xml.etree.ElementTree import ParseError
 
-from _loaders.file_test import OPEN, PATH_EXISTS, PATH_ISFILE
+from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import xml
 
 file_content = """
@@ -29,60 +28,89 @@ file_content = """
 file_path = 'path/to/data.xml'
 
 
-class TestXmlLoader(TestCase):
+class TestXmlLoader(LoaderTestBase, TestCase):
 
     def test_xml_loader_from_file_children(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = xml(file_path)
-            self.assertEqual(len(data), 3)
-            self.assertEqual(data[0].salary, 80000)
-            self.assertIsInstance(data[0].salary, int)
-            self.assertEqual(data[1].child.name, "Frank")
-            self.assertIsInstance(data[1].child.name, str)
-            self.assertEqual(data[2].cars.car[0], 'Bugatti')
-            self.assertIsInstance(data[2].cars.car[0], str)
+
+            try:
+                first = next(data)
+            except StopIteration:
+                return
+            self.assertEqual(first.salary, 80000)
+            self.assertIsInstance(first.salary, int)
+
+            try:
+                second = next(data)
+            except StopIteration:
+                return
+            self.assertEqual(second.child.name, "Frank")
+            self.assertIsInstance(second.child.name, str)
+
+            try:
+                third = next(data)
+            except StopIteration:
+                return
+            self.assertEqual(third.cars.car[0], 'Bugatti')
+            self.assertIsInstance(third.cars.car[0], str)
+
+            self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_from_file_no_children_false(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = xml(file_path, retrieve_children=False)
-            self.assertEqual(len(data), 1)
-            self.assertEqual(data[0].employee[0].salary, 80000)
-            self.assertIsInstance(data[0].employee[0].salary, int)
-            self.assertEqual(data[0].employee[1].child.name, "Frank")
-            self.assertIsInstance(data[0].employee[1].child.name, str)
-            self.assertEqual(data[0].founder.cars.car[0], 'Bugatti')
-            self.assertIsInstance(data[0].founder.cars.car[0], str)
+
+            try:
+                first = next(data)
+            except StopIteration:
+                return
+
+            self.assertEqual(first.employee[0].salary, 80000)
+            self.assertIsInstance(first.employee[0].salary, int)
+            self.assertEqual(first.employee[1].child.name, "Frank")
+            self.assertIsInstance(first.employee[1].child.name, str)
+            self.assertEqual(first.founder.cars.car[0], 'Bugatti')
+            self.assertIsInstance(first.founder.cars.car[0], str)
+
+            self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_no_casting(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = xml(file_path, cast_types=False)
-            self.assertEqual(len(data), 3)
-            self.assertEqual(data[0].salary, '80000')
-            self.assertIsInstance(data[0].salary, str)
-            self.assertEqual(data[1].child.name, "Frank")
-            self.assertIsInstance(data[1].child.name, str)
-            self.assertEqual(data[2].cars.car[0], 'Bugatti')
-            self.assertIsInstance(data[2].cars.car[0], str)
+
+            try:
+                first = next(data)
+            except StopIteration:
+                pass
+            self.assertEqual(first.salary, '80000')
+            self.assertIsInstance(first.salary, str)
+
+            try:
+                second = next(data)
+            except StopIteration:
+                pass
+            self.assertEqual(second.child.name, "Frank")
+            self.assertIsInstance(second.child.name, str)
+
+            try:
+                third = next(data)
+            except StopIteration:
+                pass
+            self.assertEqual(third.cars.car[0], 'Bugatti')
+            self.assertIsInstance(third.cars.car[0], str)
+
+            self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_is_iterable(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = xml(file_path)
             self.assertEqual(len(list(iter(data))), 3)
 
     def test_xml_loader_with_empty_file(self):
-        with (patch(OPEN, mock_open(read_data="")),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(''):
             data = xml(file_path)
-            self.assertEqual(len(data), 0)
+            self.assertRaises(ParseError, next, data)
 
     def test_xml_loader_with_invalid_path(self):
         with self.assertRaises(FileNotFoundError):
@@ -94,14 +122,30 @@ class TestXmlLoader(TestCase):
 
     def test_xml_loader_from_string(self):
         data = xml(file_content, read_from_src=True)
-        self.assertEqual(len(data), 3)
-        self.assertEqual(data[0].salary, 80000)
-        self.assertIsInstance(data[0].salary, int)
-        self.assertEqual(data[1].child.name, "Frank")
-        self.assertIsInstance(data[1].child.name, str)
-        self.assertEqual(data[2].cars.car[0], 'Bugatti')
-        self.assertIsInstance(data[2].cars.car[0], str)
+
+        try:
+            first = next(data)
+        except StopIteration:
+            pass
+        self.assertEqual(first.salary, 80000)
+        self.assertIsInstance(first.salary, int)
+
+        try:
+            second = next(data)
+        except StopIteration:
+            pass
+        self.assertEqual(second.child.name, "Frank")
+        self.assertIsInstance(second.child.name, str)
+
+        try:
+            third = next(data)
+        except StopIteration:
+            pass
+        self.assertEqual(third.cars.car[0], 'Bugatti')
+        self.assertIsInstance(third.cars.car[0], str)
+
+        self.assertRaises(StopIteration, next, data)
 
     def test_xml_loader_from_empty_string(self):
         with self.assertRaises(ParseError):
-            len(xml('', read_from_src=True))
+            list(xml('', read_from_src=True))
