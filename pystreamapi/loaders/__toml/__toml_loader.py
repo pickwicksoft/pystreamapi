@@ -1,7 +1,7 @@
-import tomlkit
 from collections import namedtuple
 from typing import Any, Iterator
 
+import tomlkit
 from pystreamapi.loaders.__loader_utils import LoaderUtils
 
 
