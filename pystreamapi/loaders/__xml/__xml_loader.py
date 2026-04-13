@@ -92,7 +92,6 @@ def _iterparse_xml(source: "IO[Any]", retrieve_children: bool, cast_types: bool)
             else:
                 if depth == 0:
                     yield __parse_xml(root, cast_types)
-                    root.remove(elem)
                     return
 
 
