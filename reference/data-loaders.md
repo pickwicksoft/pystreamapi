@@ -3,13 +3,13 @@
 Data loaders provide a convenient way to process data from various data files in your streams. You can access the values of each data set as if it were an object, containing the header names as attributes.
 
 {% hint style="info" %}
-Currently, PyStreamAPI supports reading data from CSV, JSON, XML and YAML files.
+Currently, PyStreamAPI supports reading data from CSV, JSON, XML, YAML and TOML files.
 {% endhint %}
 
 To use the loaders, you can import them with this line:
 
 ```python
-from pystreamapi.loaders import csv, json, xml, yaml
+from pystreamapi.loaders import csv, json, toml, xml, yaml
 ```
 
 ### CSV loader
@@ -54,6 +54,14 @@ Stream.of(csv("path/to/data.csv", cast_types=False, delimiter=";")) \
 ### JSON loader
 
 In order to load the data from a JSON file, you can use the `json` loader.
+
+The loader isn't included in the core version of pystreamapi. You can install it using the following command:
+
+```bash
+pip install 'streams.py[json_loader]'
+```
+
+:tada: Now you can use the loader as described below!
 
 You can read data either from a JSON file or a string containing JSON. If you read from a string you have to set the `read_from_src` parameter to `True`.
 
@@ -207,7 +215,7 @@ You can read data either from a YAML file or a string containing YAML. If you re
 
 By default, all values get converted to `int`, `float`, `bool` or otherwise `str`.&#x20;
 
-The example below uses this JSON file:
+The example below uses this YAML file:
 
 {% code title="data.yaml" fullWidth="false" %}
 ```yaml
@@ -239,4 +247,48 @@ Stream.of(yaml("- name: Joe\n  age: 20\n- name: Jane\n  age: 30",
                read_from_src=True)) \
     .map(lambda x: x.age) \
     .for_each(print)  # 20, 30
+```
+
+### TOML loader
+
+In order to load the data from a TOML file, you can use the `toml` loader.
+
+The `toml` loader is included in the core version of pystreamapi — no extra install is needed.
+
+The loader reads the entire TOML document and yields it as a single namedtuple, so attributes map directly to top-level keys.
+
+You can read data either from a TOML file or a string containing TOML. If you read from a string you have to set the `read_from_src` parameter to `True`.
+
+The example below uses this TOML file:
+
+{% code title="config.toml" fullWidth="false" %}
+```toml
+[server]
+host = "localhost"
+port = 8080
+
+[database]
+name = "mydb"
+```
+{% endcode %}
+
+```python
+from pystreamapi import Stream
+from pystreamapi.loaders import toml
+
+Stream.of(toml("path/to/config.toml")) \
+    .map(lambda x: x.server.host) \
+    .for_each(print)  # "localhost"
+```
+
+If you want to pass the TOML directly as a string, you can do it like that:
+
+```python
+from pystreamapi import Stream
+from pystreamapi.loaders import toml
+
+Stream.of(toml("[server]\nhost = \"localhost\"\nport = 8080", 
+               read_from_src=True)) \
+    .map(lambda x: x.server.port) \
+    .for_each(print)  # 8080
 ```
