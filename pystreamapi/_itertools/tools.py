@@ -1,10 +1,10 @@
 # pylint: disable=protected-access
-from typing import Iterable
+from typing import Iterable, Optional
 
 from pystreamapi._streams.error.__error import ErrorHandler, _sentinel
 
 
-def dropwhile(predicate, iterable, handler: ErrorHandler = None):
+def dropwhile(predicate, iterable, handler: Optional[ErrorHandler] = None):
     """
     Drop items from the iterable while predicate(item) is true.
     Afterward, return every element until the iterable is exhausted.
@@ -24,7 +24,7 @@ def dropwhile(predicate, iterable, handler: ErrorHandler = None):
 _initial_missing = object()
 
 
-def reduce(function, sequence, initial=_initial_missing, handler: ErrorHandler = None):
+def reduce(function, sequence, initial=_initial_missing, handler: Optional[ErrorHandler] = None):
     """
     Apply a function of two arguments cumulatively to the items of a sequence
     or iterable, from left to right, to reduce the iterable to a single
