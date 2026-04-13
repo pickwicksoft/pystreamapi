@@ -18,7 +18,7 @@ If you want to install pystreamapi together with the optional extensions, use th
 pip install 'streams.py[all]'
 ```
 
-This will install pystreamapi together with all optional loaders. You can also install those extensions individually, as described on following page:
+This will install pystreamapi together with all optional loader extras: `xml_loader` (XML support) and `json_loader` (streaming JSON support via ijson). TOML and YAML support are included in the core install. You can also install extras individually, as described on the following page:
 
 [data-loaders.md](reference/data-loaders.md "mention")
 
@@ -47,17 +47,13 @@ Stream.of([1, 2, 3]) # Can return a sequential or a parallel stream
 
 Using the `of()` method will let the implementation decide which `Stream` to use. If the source is numerical, a `NumericStream` is created.
 
-{% hint style="info" %}
-Currently, it always returns a `SequentialStream` or a `SequentialNumericStream`
-{% endhint %}
-
 ### `Stream.parallel_of()`
 
 ```python
 Stream.parallel_of([1, 2, 3]) # Returns a parallel stream (Either normal or numeric)
 ```
 
-### `Stream.sequential.of()`
+### `Stream.sequential_of()`
 
 ```python
 Stream.sequential_of([1, 2, 3]) # Returns a sequential stream (Either normal or numeric)
