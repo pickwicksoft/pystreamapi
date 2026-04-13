@@ -39,8 +39,10 @@ class _PeekableBytesReader:
         self._src = source
 
     def read(self, size=-1):
-        """Read up to size bytes, replaying the pre-read buffer before
-        reading from the underlying source."""
+        """
+        Read up to size bytes, replaying the pre-read buffer before
+        reading from the underlying source.
+        """
         if size == -1:
             # Full-read path: used by non-chunking callers (e.g. test helpers).
             # Streaming callers (like ijson) always pass an explicit chunk size.
