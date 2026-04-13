@@ -52,12 +52,12 @@ def __lazy_load_toml_string(toml_string: str) -> Iterator[Any]:
     return generator()
 
 
-def __dict_to_namedtuple(d, name='Item'):
+def __dict_to_namedtuple(data, name='Item'):
     """Recursively convert a dictionary (or list) to namedtuples."""
-    if isinstance(d, dict):
-        fields = list(d.keys())
+    if isinstance(data, dict):
+        fields = list(data.keys())
         Item = namedtuple(name, fields)
-        return Item(**{k: __dict_to_namedtuple(v, k) for k, v in d.items()})
-    if isinstance(d, list):
-        return [__dict_to_namedtuple(item, name) for item in d]
-    return d
+        return Item(**{k: __dict_to_namedtuple(v, k) for k, v in data.items()})
+    if isinstance(data, list):
+        return [__dict_to_namedtuple(item, name) for item in data]
+    return data
