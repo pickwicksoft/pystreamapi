@@ -16,6 +16,7 @@ packages = [
 python = ">=3.10,<4.0"
 joblib = ">=1.2.0"
 defusedxml = { version = ">=0.7,<0.8", optional = true }
+ijson = { version = ">=3.1", optional = true }
 pyyaml = "^6.0.1"
 tomlkit = "^0.13.2"
 setuptools = ">=70.0.0"
@@ -24,7 +25,8 @@ setuptools = ">=70.0.0"
 xml_loader = ["defusedxml"]
 yaml_loader = ["pyyaml"]
 toml_loader = ["tomlkit"]
-all = ["defusedxml", "pyyaml", "tomlkit"]
+json_loader = ["ijson"]
+all = ["defusedxml", "ijson", "pyyaml", "tomlkit"]
 
 [tool.poetry.group.test.dependencies]
 parameterized = "*"
