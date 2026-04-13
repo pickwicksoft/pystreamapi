@@ -23,7 +23,8 @@ setuptools = ">=70.0.0"
 [tool.poetry.extras]
 xml_loader = ["defusedxml"]
 yaml_loader = ["pyyaml"]
-all = ["defusedxml", "pyyaml"]
+toml_loader = ["tomlkit"]
+all = ["defusedxml", "pyyaml", "tomlkit"]
 
 [tool.poetry.group.test.dependencies]
 parameterized = "*"

@@ -1294,6 +1294,7 @@ files = [
     {file = "tomlkit-0.13.3-py3-none-any.whl", hash = "sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0"},
     {file = "tomlkit-0.13.3.tar.gz", hash = "sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1"},
 ]
+markers = {main = "extra == \"toml-loader\" or extra == \"all\""}
 
 [[package]]
 name = "typing-extensions"
@@ -1309,11 +1310,12 @@ files = [
 ]
 
 [extras]
-all = ["defusedxml", "pyyaml"]
+all = ["defusedxml", "pyyaml", "tomlkit"]
+toml-loader = ["tomlkit"]
 xml-loader = ["defusedxml"]
 yaml-loader = ["pyyaml"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "1884cd09143fe577fc8d1478404ea62a9936fd815f467da3530d61872c20bb9a"
+content-hash = "c436b17bc26b05df172933d6c2063092dfbfc27c1f05ee549a0f288ba4b89bc4"
