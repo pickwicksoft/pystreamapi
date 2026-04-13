@@ -1,11 +1,10 @@
 # pylint: disable=not-context-manager
 from types import GeneratorType
 from unittest import TestCase
-from unittest.mock import patch, mock_open
 
 import yaml as yaml_lib
 
-from _loaders.file_test import OPEN, PATH_EXISTS, PATH_ISFILE
+from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import yaml
 
 file_content = """
@@ -19,26 +18,20 @@ file_content = """
 file_path = 'path/to/data.yaml'
 
 
-class TestYamlLoader(TestCase):
+class TestYamlLoader(LoaderTestBase, TestCase):
 
     def test_yaml_loader_from_file(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = yaml(file_path)
             self._check_extracted_data(data)
 
     def test_yaml_loader_is_iterable(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = yaml(file_path)
             self.assertEqual(len(list(iter(data))), 2)
 
     def test_yaml_loader_with_empty_file(self):
-        with (patch(OPEN, mock_open(read_data="")),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(""):
             data = yaml(file_path)
             self.assertEqual(len(list(data)), 0)
 
@@ -58,9 +51,7 @@ class TestYamlLoader(TestCase):
         self.assertEqual(list(yaml('', read_from_src=True)), [])
 
     def test_yaml_loader_is_lazy(self):
-        with (patch(OPEN, mock_open(read_data=file_content)),
-              patch(PATH_EXISTS, return_value=True),
-              patch(PATH_ISFILE, return_value=True)):
+        with self.mock_file(file_content):
             data = yaml(file_path)
             self.assertIsInstance(data, GeneratorType)
 
