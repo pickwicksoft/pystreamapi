@@ -1,6 +1,5 @@
 # pylint: disable=not-context-manager
 from unittest import TestCase
-
 from _loaders.file_test import LoaderTestBase
 from pystreamapi.loaders import csv
 
@@ -16,13 +15,19 @@ a,b"""
 
     def _assert_typed_rows(self, data):
         """Assert that the two expected rows are present with correct types and values."""
-        first = next(data)
+        try:
+            first = next(data)
+        except StopIteration:
+            self.fail("Expected first row but iterator was empty")
         self.assertEqual(first.attr1, 1)
         self.assertIsInstance(first.attr1, int)
         self.assertEqual(first.attr2, 2.0)
         self.assertIsInstance(first.attr2, float)
 
-        second = next(data)
+        try:
+            second = next(data)
+        except StopIteration:
+            self.fail("Expected second row but iterator was exhausted after first row")
         self.assertEqual(second.attr1, 'a')
         self.assertIsInstance(second.attr1, str)
         self.assertEqual(second.attr2, 'b')
@@ -38,7 +43,10 @@ a,b"""
     def test_csv_loader_without_type_casting(self):
         """Test CSV loading with type casting disabled."""
         with self.mock_file(self.file_content):
-            first = next(csv(self.file_path, cast_types=False))
+            try:
+                first = next(csv(self.file_path, cast_types=False))
+            except StopIteration:
+                self.fail("Expected first row but iterator was empty")
             self.assertEqual(first.attr1, '1')
             self.assertIsInstance(first.attr1, str)
             self.assertEqual(first.attr2, '2.0')
@@ -53,7 +61,10 @@ a,b"""
         """Test CSV loading with a custom delimiter."""
         content_with_semicolon = self.file_content.replace(",", ";")
         with self.mock_file(content_with_semicolon):
-            first = next(csv(self.file_path, delimiter=';'))
+            try:
+                first = next(csv(self.file_path, delimiter=';'))
+            except StopIteration:
+                self.fail("Expected first row but iterator was empty")
             self.assertEqual(first.attr1, 1)
             self.assertEqual(first.attr2, 2.0)
 
