@@ -18,7 +18,7 @@ class LoaderTestBase:
             exists: Whether the file exists
             is_file: Whether the path points to a file
         """
-        with (patch(OPEN, mock_open(read_data=content)),
-              patch(PATH_EXISTS, return_value=exists),
-              patch(PATH_ISFILE, return_value=is_file)):
-            yield
+        with patch(OPEN, mock_open(read_data=content)):
+            with patch(PATH_EXISTS, return_value=exists):
+                with patch(PATH_ISFILE, return_value=is_file):
+                    yield
