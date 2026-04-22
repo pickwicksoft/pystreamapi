@@ -18,7 +18,7 @@ joblib = ">=1.2.0"
 defusedxml = { version = ">=0.7,<0.8", optional = true }
 ijson = { version = ">=3.1", optional = true }
 pyyaml = "^6.0.1"
-tomlkit = "^0.13.2"
+tomlkit = ">=0.13.2,<0.15.0"
 setuptools = ">=70.0.0"
 
 [tool.poetry.extras]
