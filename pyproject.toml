@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "streams.py"
-version = "1.4.0"
+version = "1.4.1"
 authors = ["Stefan Garlonta <stefan@pickwicksoft.org>"]
 description = "A stream library for Python inspired by Java Stream API"
 keywords = ["streams", "parallel", "data"]
