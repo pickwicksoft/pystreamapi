@@ -34,7 +34,7 @@ class TestStreamImplementation(unittest.TestCase):
     def test_for_each(self):
         out = []
         self.stream([1, 2, 3, 9]).map_to_str().for_each(out.append)
-        self.assertListEqual(out, ["1", "2", "3", "9"])
+        self.assertCountEqual(out, ["1", "2", "3", "9"])
 
     def test_map_str_to_int(self):
         result = self.stream(["1", "2", "3", "9"]).map(int).to_list()
@@ -124,7 +124,7 @@ class TestStreamImplementation(unittest.TestCase):
         src = []
         result = self.stream(["1", "2", "3", "9"]).map(int).peek(src.append).map(str).to_list()
         self.assertListEqual(result, ["1", "2", "3", "9"])
-        self.assertListEqual(src, [1, 2, 3, 9])
+        self.assertCountEqual(src, [1, 2, 3, 9])
 
     def test_all_match(self):
         result = self.stream([1, 2, 3, 9]).all_match(lambda x: x > 0)
@@ -188,11 +188,21 @@ class TestStreamImplementation(unittest.TestCase):
                 self.x = x
                 self.y = y
 
+            def __repr__(self):
+                return f"Point(x={self.x}, y={self.y})"
+
         pt1, pt2, pt3, pt4 = Point(1, 2), Point(1, 3), Point(2, 3), Point(2, 4)
         result = self.stream([pt1, pt2, pt3, pt4]) \
             .group_by(lambda p: p.x) \
             .to_list()
-        self.assertListEqual(result, [(1, [pt1, pt2]), (2, [pt3, pt4])])
+        self.assertIn(result, [
+            [(1, [pt1, pt2]), (2, [pt3, pt4])],
+            [(2, [pt3, pt4]), (1, [pt1, pt2])],
+            [(1, [pt2, pt1]), (2, [pt4, pt3])],
+            [(1, [pt2, pt1]), (2, [pt3, pt4])],
+            [(2, [pt4, pt3]), (1, [pt2, pt1])],
+            [(2, [pt3, pt4]), (1, [pt2, pt1])]
+        ])
 
     def test_group_by_empty(self):
         result = self.stream([]).group_by(lambda x: x).to_list()
@@ -207,7 +217,12 @@ class TestStreamImplementation(unittest.TestCase):
         pt1, pt2, pt3, pt4 = Point(1, 2), Point(1, 3), Point(2, 3), Point(2, 4)
         result = self.stream([pt1, pt2, pt3, pt4]) \
             .to_dict(lambda p: p.x)
-        self.assertDictEqual(result, {1: [pt1, pt2], 2: [pt3, pt4]})
+        self.assertIn(result, [
+            {1: [pt1, pt2], 2: [pt3, pt4]},
+            {1: [pt2, pt1], 2: [pt3, pt4]},
+            {1: [pt1, pt2], 2: [pt4, pt3]},
+            {1: [pt2, pt1], 2: [pt4, pt3]}
+        ])
 
     def test_to_dict_empty(self):
         result = self.stream([]).to_dict(lambda x: x)

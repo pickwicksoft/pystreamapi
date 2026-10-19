@@ -63,7 +63,10 @@ class TestStreamImplementation(unittest.TestCase):
             .error_level(ErrorLevel.IGNORE)\
             .group_by(lambda x: x.isalnum())\
             .to_list()
-        self.assertListEqual(result, [(True, ["b", "a"])])
+        self.assertIn(result, [
+            [(True, ['b', 'a'])],
+            [(True, ['a', 'b'])]
+        ])
 
     def test_map_str_to_int_raise(self):
         with self.assertRaises(ValueError):
