@@ -197,6 +197,7 @@ class TestStreamImplementation(unittest.TestCase):
             .to_list()
         self.assertIn(result, [
             [(1, [pt1, pt2]), (2, [pt3, pt4])],
+            [(1, [pt1, pt2]), (2, [pt4, pt3])],
             [(2, [pt3, pt4]), (1, [pt1, pt2])],
             [(1, [pt2, pt1]), (2, [pt4, pt3])],
             [(1, [pt2, pt1]), (2, [pt3, pt4])],
